@@ -1,0 +1,67 @@
+package cn.exploring.engine.server.db.service;
+
+import java.util.Map;
+
+@Service
+public class {big_camel_case}Service
+{
+
+    @Resource
+    {big_camel_case}Mapper {little_camel_case}Mapper;
+
+    public {big_camel_case} select{big_camel_case}Duplicate({duplicate_param}) {
+        {big_camel_case}Example example = new {big_camel_case}Example();
+        {big_camel_case}Example.Criteria criteria = example.createCriteria();
+        {duplicate_logic}
+        // criteria.andDeletedEqualTo(false).andMedalIdEqualTo(medalId).andYouzanVipIdEqualTo(youzanVipId);
+        return {little_camel_case}Mapper.selectOneByExample(example);
+    }
+
+
+    public Map select({select_param} , Integer page, Integer limit, String sort, String order) {
+        {big_camel_case}Example example = new {big_camel_case}Example();
+        {big_camel_case}Example.Criteria criteria = example.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        {select_logic}
+        PageHelper.startPage(page, limit);
+        List<{big_camel_case}> {little_camel_case}List = {little_camel_case}Mapper.selectByExample(example);
+
+        Long total = PageInfo.of({little_camel_case}List).getTotal();
+        return new HashMap(2) {{
+            put("total", total);
+            put("items", {little_camel_case}List);
+        }};
+    }
+
+
+    public {big_camel_case} add({big_camel_case} {little_camel_case}) {
+        LocalDateTime now = LocalDateTime.now();
+        {little_camel_case}.setAddTime(now);
+        {little_camel_case}.setUpdateTime(now);
+        {little_camel_case}.setDeleted(false);
+        {little_camel_case}Mapper.insertSelective({little_camel_case});
+        return {little_camel_case};
+    }
+
+    public void update({big_camel_case} {little_camel_case}) {
+        {little_camel_case}.setUpdateTime(LocalDateTime.now());
+        {little_camel_case}Mapper.updateByPrimaryKey({little_camel_case});
+    }
+
+
+    public List<{big_camel_case}> select{big_camel_case}ById(List<Integer> idList) {
+        {big_camel_case}Example example = new {big_camel_case}Example();
+        {big_camel_case}Example.Criteria criteria = example.createCriteria();
+        criteria.andDeletedEqualTo(false).andIdIn(idList);
+        return {little_camel_case}Mapper.selectByExample(example);
+    }
+
+    public void batchDeleted(List<Integer> idList) {
+        List<{big_camel_case}> dataList = select{big_camel_case}ById(idList);
+        dataList.forEach(x -> {
+            x.setDeleted(null);
+            update(x);
+        });
+    }
+
+}

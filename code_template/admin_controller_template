@@ -1,0 +1,68 @@
+package cn.exploring.engine.server.admin.web;
+
+import cn.exploring.engine.server.admin.annotation.RequiresPermissionsDesc;
+import cn.exploring.engine.server.core.util.ResponseUtil;
+import com.alibaba.druid.support.logging.Log;
+import com.alibaba.druid.support.logging.LogFactory;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+
+@RestController
+@RequestMapping("/admin/{little_camel_case}")
+@Validated
+public class Admin{big_camel_case}Controller {
+    private final Log logger = LogFactory.getLog(Admin{big_camel_case}Controller.class);
+
+    @Autowired
+    private {big_camel_case}Service {little_camel_case}Service;
+
+
+    @RequiresPermissions("admin:{little_camel_case}:list")
+    @RequiresPermissionsDesc(menu = {menu_list}, button = "查询")
+    @GetMapping("/list")
+    public Object list({admin_select_param}
+                       @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer limit,
+                       @RequestParam(required = false, defaultValue = "add_time") String sort, @RequestParam(required = false, defaultValue = "desc") String order) {
+        return ResponseUtil.ok({little_camel_case}Service.select({param_list}, page, limit, sort, order));
+    }
+
+
+    @RequiresPermissions("admin:{little_camel_case}:add")
+    @RequiresPermissionsDesc(menu = {menu_list}, button = "添加")
+    @PostMapping("/add")
+    public Object add(@RequestBody {big_camel_case} {little_camel_case}) {
+        if ({little_camel_case}Service.select{big_camel_case}Duplicate({duplicate_admin_case_param}) != null) {
+            return ResponseUtil.fail(509, "唯一索引冲突");
+        }
+
+        {little_camel_case}Service.add({little_camel_case});
+        return ResponseUtil.ok("添加成功");
+    }
+
+
+    @RequiresPermissions("admin:{little_camel_case}:update")
+    @RequiresPermissionsDesc(menu = {menu_list}, button = "编辑")
+    @PostMapping("/update")
+    public Object update(@RequestBody {big_camel_case} {little_camel_case}) {
+        {big_camel_case} duplicate{big_camel_case} = {little_camel_case}Service.select{big_camel_case}Duplicate({duplicate_admin_case_param});
+        if (duplicate{big_camel_case} != null && !{little_camel_case}.getId().equals(duplicate{big_camel_case}.getId())) {
+            return ResponseUtil.fail(509, "唯一索引冲突");
+        }
+
+        {little_camel_case}Service.update({little_camel_case});
+        return ResponseUtil.ok("更新信息成功");
+    }
+
+
+    @RequiresPermissions("admin:{little_camel_case}:batchDeleted")
+    @RequiresPermissionsDesc(menu = {menu_list}, button = "删除")
+    @PostMapping("/batchDeleted")
+    public Object batchDeleted(@RequestBody List<Integer> idList) {
+        {little_camel_case}Service.batchDeleted(idList);
+        return ResponseUtil.ok("删除成功");
+    }
+
+}
