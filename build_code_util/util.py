@@ -1,5 +1,12 @@
 
 def uppercase_word_first_letter(word):
+    """
+
+    将单词的首字母大写
+
+    :param word:
+    :return:
+    """
     return word[0].upper() + word[1:]
 
 
