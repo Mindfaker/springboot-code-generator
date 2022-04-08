@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
 
 from util.build_java_util import exchange_field_2_camel_case
+from config.build_code_config import placeholder_list, config_param_list
 
 default_columns_list = ["id", "add_time", "update_time", "deleted"]
 
@@ -26,6 +27,35 @@ logic_dict = {
                                                          '{\r\n\tcriteria.and{big_camel_case}Like("%" + {'
                                                          'little_camel_case} + "%");\r\n} '
 }
+
+
+def read_template(template_name: str) -> list:
+    """
+
+    读取模板的数据
+
+    :param template_name:
+    :return:
+    """
+    f = open(os.path.join(get_template_path(), template_name), encoding="utf-8")
+    demo_list = f.readlines()
+    f.close()
+    return demo_list
+
+
+def get_template_path():
+    """
+
+    返回模板所在的文件路劲
+
+    :return:
+    """
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "code_template")
+
+
+# 服务的模板  和  后台的模板
+SERVICE_TEMPLATE = read_template("service_template")
+ADMIN_TEMPLATE = read_template("admin_controller_template")
 
 
 def get_connection(sql_name, root='engine', password='Engine123S56^&*enginE',
@@ -149,5 +179,156 @@ def build_logic_list_str(columns_list, table_structure):
     return "\r\n".join(logic_str_list)
 
 
-def build_code():
+def build_duplicate_admin_case_param(duplicate_columns_list):
+    """
+
+    生成校验唯一索引的查询入参
+
+    :param duplicate_columns_list:
+    :return:
+    """
+    duplicate_format_str = "{little_camel_case}.get{bigColumnName}()"
+    duplicate_columns_list = [x for x in duplicate_columns_list if x != "deleted"]
+    duplicate_admin_list = list()
+    for column in duplicate_columns_list:
+        duplicate_admin_list.append(duplicate_format_str
+                                    .format(little_camel_case=exchange_field_2_camel_case(column),
+                                            bigColumnName=exchange_field_2_camel_case(column, is_small=False)))
+    return ",  ".join(duplicate_admin_list)
+
+
+def build_duplicate_logic(duplicate_columns_list):
+    """
+
+    创建查询唯一索引的逻辑
+
+    :param duplicate_columns_list:
+    :return:
+    """
+    target_duplicate_columns_list = [x for x in duplicate_columns_list if x != "deleted"]
+    logic_list = list()
+    logic_format_str = ".and{big_camel_case}EqualTo({little_camel_case})"
+    for column in target_duplicate_columns_list:
+        logic_list.append(logic_format_str.format(little_camel_case=exchange_field_2_camel_case(column),
+                                                  big_camel_case=exchange_field_2_camel_case(column, False)))
+    return "\t\tcriteria.andDeletedEqualTo(false)" + "".join(logic_list) + ";"
+
+
+def check_line_have_placeholder(line):
+    """
+
+    检查一行模板是否有  占位符
+
+    :param line:
+    :return:
+    """
+    for placeholder in placeholder_list:
+        if placeholder in line:
+            return True
+    return False
+
+
+def build_code(template, table_name, replace_dict):
+    """
+
+    根据模板创建代码
+
+    :param template:
+    :param table_name:
+    :param replace_dict:
+    :return:
+    """
+    code_list = list()
+    for line in template:
+        if check_line_have_placeholder(line):
+            code_list.append(line
+                             .replace("{big_camel_case}", exchange_field_2_camel_case(table_name, is_small=False))
+                             .replace("{little_camel_case}", exchange_field_2_camel_case(table_name))
+                             .replace("{select_param}", replace_dict["param_list_str"])
+                             .replace("{select_logic}", replace_dict["logic_list_str"])
+                             .replace("{menu_list}", replace_dict["menu_list"])
+                             .replace("{admin_select_param}", replace_dict["admin_select_param"])
+                             .replace("{duplicate_admin_case_param}", replace_dict["duplicate_admin_case_param"])
+                             .replace("{duplicate_param}", replace_dict["duplicate_param"])
+                             .replace("{duplicate_logic}", replace_dict["duplicate_logic"]))
+        else:
+            code_list.append(line)
+    return "".join(code_list)
+
+
+# todo 等待实现
+def check_config_info():
+    print("对传入的参数进行必要性校验")
     pass
+
+
+def exchange_format_dict_from_input_param(format_dict, input_param: dict, format_key_list: list) -> dict:
+    """
+
+    将 前端输入参数中  生成直接需要的参数  传递给  生成参数的字典中
+
+    :param format_dict:
+    :param input_param:
+    :param format_key_list:
+    :return:
+    """
+    for key in format_key_list:
+        if key in input_param.keys():
+            format_dict[key] = input_param.get(key)
+    return format_dict
+
+
+def build_code_main_process(all_config_dict, code_type):
+    """
+
+    创建代码的主要流程
+
+    :param all_config_dict:  前端提供的主要配置参数
+    :param code_type:   需要生成的代码类型  目前应该 只有 service 和 admin
+    :return:
+    """
+
+    # 用来替换模板的数据
+    format_dict = dict()
+
+    engine = get_connection(all_config_dict["sql_name"], all_config_dict["mysql_root"],
+                            all_config_dict["mysql_password"],
+                            all_config_dict["mysql_host"], all_config_dict["mysql_port"])
+
+    check_config_info()
+    table_name = all_config_dict["table_name"]
+    table_structure = get_mysql_structure(table_name, engine=engine)
+
+    # 查询使用的字段名称
+    if all_config_dict.get("select_columns") is None:
+        columns_list = get_select_columns_list(table_structure)
+    else:
+        columns_list = all_config_dict.get("select_columns")
+
+    # 唯一索引的字段名称
+    if all_config_dict.get("unique_index_columns") is None:
+        unique_columns_list = get_duplicate_columns_list(table_structure)
+    else:
+        unique_columns_list = all_config_dict.get("unique_index_columns")
+
+    unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
+
+    # 生成填充模板需要的参数
+    format_dict["param_list_str"] = build_param_list_str(columns_list, table_structure)
+    format_dict["logic_list_str"] = build_logic_list_str(columns_list, table_structure)
+    format_dict["admin_select_param"] = build_admin_param_list_str(columns_list, table_structure)
+    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure)
+    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure)
+    format_dict["duplicate_admin_case_param"] = build_duplicate_admin_case_param(unique_columns_list)
+    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)
+
+    format_dict = exchange_format_dict_from_input_param(format_dict, all_config_dict, config_param_list)
+
+    if code_type == "service":
+        template = SERVICE_TEMPLATE
+    elif code_type == "admin":
+        template = ADMIN_TEMPLATE
+    else:
+        return ""
+
+    return build_code(template=template, table_name=all_config_dict["table_name"], replace_dict=format_dict)

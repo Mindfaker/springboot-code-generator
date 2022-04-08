@@ -44,10 +44,10 @@ def get_template_path():
     """
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "code_template")
 
+
 # 服务的模板  和  后台的模板
 SERVICE_TEMPLATE = read_template("service_template")
 ADMIN_TEMPLATE = read_template("admin_controller_template")
-
 
 
 def uppercase_word_first_letter(word):
@@ -89,8 +89,15 @@ def get_select_columns_list(table_structure):
     return [x for x in table_structure.keys() if x not in default_columns_list]
 
 
-# 转换成参数信息
 def build_param_list_str(columns_list, table_structure: dict):
+    """
+
+    根据  表结构   和   字段列表  创建入参
+
+    :param columns_list:
+    :param table_structure:
+    :return:
+    """
     param_info_list = list()
 
     for column in columns_list:
@@ -101,6 +108,14 @@ def build_param_list_str(columns_list, table_structure: dict):
 
 
 def build_admin_param_list_str(columns_list, table_structure: dict):
+    """
+
+    根据  表结构   和   字段列表   创建controller层的入参
+
+    :param columns_list:
+    :param table_structure:
+    :return:
+    """
     param_info_list = list()
 
     for column in columns_list:
@@ -112,6 +127,14 @@ def build_admin_param_list_str(columns_list, table_structure: dict):
 
 
 def build_logic_list_str(columns_list, table_structure):
+    """
+
+    根据  表结构  和  字段列表   创建通用查询的逻辑
+
+    :param columns_list:
+    :param table_structure:
+    :return:
+    """
     logic_str_list = list()
     for column in columns_list:
         column_type = table_structure[column]['type']
@@ -120,6 +143,41 @@ def build_logic_list_str(columns_list, table_structure):
                 logic_dict[str(column_type)].format(big_camel_case=exchange_field_2_camel_case(column, is_small=False),
                                                     little_camel_case=exchange_field_2_camel_case(column)))
     return "\r\n".join(logic_str_list)
+
+
+def build_duplicate_admin_case_param(duplicate_columns_list):
+    """
+
+    生成校验唯一索引的查询入参
+
+    :param duplicate_columns_list:
+    :return:
+    """
+    duplicate_format_str = "{little_camel_case}.get{bigColumnName}()"
+    duplicate_columns_list = [x for x in duplicate_columns_list if x != "deleted"]
+    duplicate_admin_list = list()
+    for column in duplicate_columns_list:
+        duplicate_admin_list.append(duplicate_format_str
+                                    .format(little_camel_case=exchange_field_2_camel_case(column),
+                                            bigColumnName=exchange_field_2_camel_case(column, is_small=False)))
+    return ",  ".join(duplicate_admin_list)
+
+
+def build_duplicate_logic(duplicate_columns_list):
+    """
+
+    创建查询唯一索引的逻辑
+
+    :param duplicate_columns_list:
+    :return:
+    """
+    target_duplicate_columns_list = [x for x in duplicate_columns_list if x != "deleted"]
+    logic_list = list()
+    logic_format_str = ".and{big_camel_case}EqualTo({little_camel_case})"
+    for column in target_duplicate_columns_list:
+        logic_list.append(logic_format_str.format(little_camel_case=exchange_field_2_camel_case(column),
+                                                  big_camel_case=exchange_field_2_camel_case(column, False)))
+    return "\t\tcriteria.andDeletedEqualTo(false)" + "".join(logic_list) + ";"
 
 
 def get_file_output_path():
