@@ -34,7 +34,7 @@ public class Admin{big_camel_case}Controller {
     @RequiresPermissionsDesc(menu = {menu_list}, button = "添加")
     @PostMapping("/add")
     public Object add(@RequestBody {big_camel_case} {little_camel_case}) {
-        if ({little_camel_case}Service.select{big_camel_case}Duplicate({duplicate_admin_case_param}) != null) {
+        if ({little_camel_case}Service.selectDuplicateIndex({duplicate_admin_case_param}) != null) {
             return ResponseUtil.fail(509, "唯一索引冲突");
         }
 
@@ -47,7 +47,7 @@ public class Admin{big_camel_case}Controller {
     @RequiresPermissionsDesc(menu = {menu_list}, button = "编辑")
     @PostMapping("/update")
     public Object update(@RequestBody {big_camel_case} {little_camel_case}) {
-        {big_camel_case} duplicate{big_camel_case} = {little_camel_case}Service.select{big_camel_case}Duplicate({duplicate_admin_case_param});
+        {big_camel_case} duplicate{big_camel_case} = {little_camel_case}Service.selectDuplicateIndex({duplicate_admin_case_param});
         if (duplicate{big_camel_case} != null && !{little_camel_case}.getId().equals(duplicate{big_camel_case}.getId())) {
             return ResponseUtil.fail(509, "唯一索引冲突");
         }

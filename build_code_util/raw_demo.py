@@ -9,8 +9,6 @@ file_dir_path = os.path.dirname(os.path.abspath(__file__))
 
 
 type_dict = {
-
-
 "<class 'sqlalchemy.dialects.mysql.types.INTEGER'>" : "Integer",
 "<class 'sqlalchemy.dialects.mysql.types.TINYINT'>": "Boolean",
 "<class 'sqlalchemy.dialects.mysql.types.VARCHAR'>":"String"

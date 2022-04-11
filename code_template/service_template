@@ -9,11 +9,10 @@ public class {big_camel_case}Service
     @Resource
     {big_camel_case}Mapper {little_camel_case}Mapper;
 
-    public {big_camel_case} select{big_camel_case}Duplicate({duplicate_param}) {
+    public {big_camel_case} selectDuplicateIndex({duplicate_param}) {
         {big_camel_case}Example example = new {big_camel_case}Example();
         {big_camel_case}Example.Criteria criteria = example.createCriteria();
         {duplicate_logic}
-        // criteria.andDeletedEqualTo(false).andMedalIdEqualTo(medalId).andYouzanVipIdEqualTo(youzanVipId);
         return {little_camel_case}Mapper.selectOneByExample(example);
     }
 

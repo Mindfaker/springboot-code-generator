@@ -1,8 +1,14 @@
 import os
+import sys
+import pymysql
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
 
-from util.build_java_util import exchange_field_2_camel_case
+admin_root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "util")
+sys.path.append(admin_root)
+
+from build_java_util import exchange_field_2_camel_case
 from config.build_code_config import placeholder_list, config_param_list
 
 default_columns_list = ["id", "add_time", "update_time", "deleted"]
@@ -157,7 +163,7 @@ def build_admin_param_list_str(columns_list, table_structure: dict):
         if str(column_type) in type_dict.keys():
             param_info_list.append(
                 "@RequestParam " + type_dict[str(column_type)] + " " + exchange_field_2_camel_case(column))
-    return ",  ".join(param_info_list)
+    return ",  ".join(param_info_list) + ","
 
 
 def build_logic_list_str(columns_list, table_structure):
@@ -179,11 +185,12 @@ def build_logic_list_str(columns_list, table_structure):
     return "\r\n".join(logic_str_list)
 
 
-def build_duplicate_admin_case_param(duplicate_columns_list):
+def build_duplicate_admin_case_param(table_name, duplicate_columns_list):
     """
 
     生成校验唯一索引的查询入参
 
+    :param table_name:
     :param duplicate_columns_list:
     :return:
     """
@@ -192,7 +199,7 @@ def build_duplicate_admin_case_param(duplicate_columns_list):
     duplicate_admin_list = list()
     for column in duplicate_columns_list:
         duplicate_admin_list.append(duplicate_format_str
-                                    .format(little_camel_case=exchange_field_2_camel_case(column),
+                                    .format(little_camel_case=exchange_field_2_camel_case(table_name),
                                             bigColumnName=exchange_field_2_camel_case(column, is_small=False)))
     return ",  ".join(duplicate_admin_list)
 
@@ -250,7 +257,8 @@ def build_code(template, table_name, replace_dict):
                              .replace("{admin_select_param}", replace_dict["admin_select_param"])
                              .replace("{duplicate_admin_case_param}", replace_dict["duplicate_admin_case_param"])
                              .replace("{duplicate_param}", replace_dict["duplicate_param"])
-                             .replace("{duplicate_logic}", replace_dict["duplicate_logic"]))
+                             .replace("{duplicate_logic}", replace_dict["duplicate_logic"])
+                             .replace("{param_list}", replace_dict["param_list"]))
         else:
             code_list.append(line)
     return "".join(code_list)
@@ -307,7 +315,7 @@ def build_code_main_process(all_config_dict, code_type):
 
     # 唯一索引的字段名称
     if all_config_dict.get("unique_index_columns") is None:
-        unique_columns_list = get_duplicate_columns_list(table_structure)
+        unique_columns_list = get_duplicate_columns_list(table_name, engine=engine)
     else:
         unique_columns_list = all_config_dict.get("unique_index_columns")
 
@@ -319,8 +327,10 @@ def build_code_main_process(all_config_dict, code_type):
     format_dict["admin_select_param"] = build_admin_param_list_str(columns_list, table_structure)
     format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure)
     format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure)
-    format_dict["duplicate_admin_case_param"] = build_duplicate_admin_case_param(unique_columns_list)
+    format_dict["duplicate_admin_case_param"] =\
+        build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
     format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)
+    format_dict["param_list"] = ",".join([exchange_field_2_camel_case(x) for x in columns_list])
 
     format_dict = exchange_format_dict_from_input_param(format_dict, all_config_dict, config_param_list)
 
@@ -332,3 +342,49 @@ def build_code_main_process(all_config_dict, code_type):
         return ""
 
     return build_code(template=template, table_name=all_config_dict["table_name"], replace_dict=format_dict)
+
+
+def read_config():
+    """
+    读取解析配置文件
+    :param config_file_name:  配置文件的名称
+    :return:
+    """
+
+    # 如果配置文件不存在则返回空值
+    config_file_path = r"D:\workproject\digital-collection-server\server-db\src\main\java\cn\exploring\engine\server\db\util\config_info.txt"
+    config_data = {}
+    f = open(config_file_path, encoding="utf-8")
+    file_line_list = f.readlines()
+    for file_line in file_line_list:
+
+        # 进行数据分隔
+        data_list = split_config_data(file_line)
+        if data_list is None:
+            continue
+
+        if data_list[0].strip() == "select_columns" or data_list[0].strip() == "unique_index_columns":
+            config_data["select_columns"] = list(map(lambda x: x.strip(), data_list[1].split(",")))
+        else:
+            config_data[data_list[0].strip()] = data_list[1].strip()
+    return config_data
+
+
+# 切割每一条配置文件数据
+def split_config_data(config_line):
+    if ":" not in config_line:
+        return None
+
+    first_spilt_index = config_line.index(":")
+
+    # 没有配置的话
+    if config_line[first_spilt_index + 1:].strip() == "":
+        return None
+
+    return [config_line[:first_spilt_index], config_line[first_spilt_index + 1:]]
+
+
+if __name__ == '__main__':
+    config_data_dict = read_config()
+    aa = build_code_main_process(config_data_dict, "admin")
+    print(aa)
