@@ -311,13 +311,13 @@ def build_code_main_process(all_config_dict, code_type):
     if all_config_dict.get("select_columns") is None:
         columns_list = get_select_columns_list(table_structure)
     else:
-        columns_list = all_config_dict.get("select_columns")
+        columns_list = parse_param_to_list(all_config_dict.get("select_columns"))
 
     # 唯一索引的字段名称
     if all_config_dict.get("unique_index_columns") is None:
         unique_columns_list = get_duplicate_columns_list(table_name, engine=engine)
     else:
-        unique_columns_list = all_config_dict.get("unique_index_columns")
+        unique_columns_list = parse_param_to_list(all_config_dict.get("unique_index_columns"))
 
     unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
 
@@ -370,6 +370,13 @@ def read_config():
     return config_data
 
 
+def parse_param_to_list(list_param):
+    if type(list_param) == list:
+        return list_param
+
+    return list(map(lambda x: x.strip(), list_param.split(",")))
+
+
 # 切割每一条配置文件数据
 def split_config_data(config_line):
     if ":" not in config_line:
@@ -384,7 +391,13 @@ def split_config_data(config_line):
     return [config_line[:first_spilt_index], config_line[first_spilt_index + 1:]]
 
 
+def test_main():
+    config_data_dict = read_config()
+    aa = build_code_main_process(config_data_dict, "service")
+    return aa
+
+
 if __name__ == '__main__':
     config_data_dict = read_config()
-    aa = build_code_main_process(config_data_dict, "admin")
+    aa = build_code_main_process(config_data_dict, "service")
     print(aa)

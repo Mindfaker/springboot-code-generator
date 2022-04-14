@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <form name="form">
+            <span>输入地址：</span><input id="text" class="textbox" type="text"/>
+            <input class="button" type="button" value="获取经纬度" onclick="showAdress()"/>
+        </form>
+</div>
+    
+</body>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+<script type="text/javascript">
+	function showAdress() {
+        var str = document.getElementById("text").value;	
+        $.ajax
+        ({
+            url: "https://restapi.amap.com/v3/geocode/geo",
+            dataType: "json",
+            type: "get",
+            data: { 
+                    address: str,  			
+                    key: "7486e10d3ca83a934438176cf941df0c", 
+                },
+            success:function(res){
+                alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+    }
+</script>
+<style type="text/css">
+    .button{
+        width: 100px;
+        height: 29px;
+        font-size: 16px;
+        color: white;
+        background-color: black;
+        padding: 0;
+        vertical-align: top;
+        border: 0;
+    }
+    .textbox{
+        height: 25px;
+        padding: 0;
+        vertical-align: top;
+    }
+    span{
+        font-size: 16px;
+        height: 29px;
+        line-height: 29px;
+    }
+</style>
+</html>

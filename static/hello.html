@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+	<div class="container">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				<div class="page-header">
+					<h1>
+						CRUD逻辑代码生成
+					</h1>
+				</div>
+				<form role="form">
+					<div class="form-group">
+						 <label for="sql_name">数据库名称  </label><input type="text" class="form-control" id="sql_name" value="engine_user_center" />
+					</div>
+					<div class="form-group">
+						 <label for="table_name">数据表名称  </label><input type="text" class="form-control" id="table_name" value="medal_youzan_vip_bind" />
+					</div>
+
+					<div class="form-group">
+						 <label for="mysql_host">数据库域名  </label><input type="text" class="form-control" id="mysql_host" value="39.101.222.130"/>
+					</div>
+
+
+					<div class="form-group">
+						 <label for="mysql_port">数据库端口  </label><input type="text" class="form-control" id="mysql_port" value="3306"/>
+					</div>
+
+
+					<div class="form-group">
+						 <label for="mysql_root">数据库账户  </label><input type="text" class="form-control" id="mysql_root" value="root"/>
+					</div>
+
+
+
+					<div class="form-group">
+						 <label for="mysql_password">数据库密码  </label><input type="text" class="form-control" id="mysql_password" value="Engine123s56.."/>
+					</div>
+
+
+					<div class="form-group">
+						 <label for="menu_list"> 管理后台权限配置  </label><input type="text" class="form-control" id="menu_list" value="{'公共服务','勋章会员卡关系配置'}"/>
+					</div>
+
+					<div class="form-group">
+						 <label for="select_columns">管理后台查询条件字段  </label><input type="text" class="form-control" id="select_columns" value="youzan_vip_id, medal_id"/>
+					</div>
+
+
+					<div class="radio">
+						 <label><input type="radio" name="code_type" id="serviceCode" value="serviceCode"/>serviceCode</label>
+						 <label><input type="radio" name="code_type" id="adminCode" value="adminCode"/>adminCode</label>
+					</div>
+			<!-- 		 <button type="submit" class="btn btn-default">生成</button> -->
+					 <input class="button" type="button" value="生成" onclick="showAdress()"/>
+				</form>
+				<h3>
+					生成内容
+				</h3>
+				<p class="code_detail">
+					生成code区域
+				</p>
+				<p>
+					 <a class="btn" href="#">View details »</a>
+				</p>
+			</div>
+		</div>
+	</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+<script type="text/javascript">
+	function showAdress() {	
+        var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+        // $.post
+        // (
+        //     // url: "https://restapi.amap.com/v3/geocode/geo",
+        //     "http://localhost:8000/what",
+        //      { 
+        //     		"web_config":{
+        //     			"sql_name": sql_name,
+        //     			"table_name": table_name,
+        //     			"select_columns":select_columns,
+        //     			"menu_list":menu_list,
+        //     			"mysql_host": mysql_host,
+        //     			"mysql_port": mysql_port,
+        //     			"mysql_root": mysql_root,
+        //     			"mysql_password": mysql_password,
+        //     			"type": "service"
+
+        //     		}	
+        //         },
+        //     function(res){
+        //         alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
+        //         console.log(res);  //在console中查看数据
+        //     }, 
+        //     'application/json'
+        // );
+
+      var  url="http://127.0.0.1:8000/what"
+      var  temp_data =      {
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": "service"
+            		}
+
+
+
+
+//       fetch(url, {
+// 	    method: 'post', // 如果是get方式的话，只能把参数拼接在url里传过去，get方式不能有body
+// 	    "Access-Control-Allow-Origin" : "*",
+// 	    "Access-Control-Allow-Credentials" : true,
+// 	    headers: {
+// 	        'Content-Type': 'application/json'
+// 	    },
+// 	    body: JSON.stringify(temp_data) // 把你要传的数据放在这里转化成json
+// 	}).then(function (response) { // 处理返回回来的数据
+// 		debugger
+// 		$(".code_detail").text( response.json())
+//
+// 	}).then(function (respsoneData) {
+// 		debugger
+// 	    let jsonData = jQuery.type(respsoneData) == 'string' ? JSON.parse(respsoneData) : respsoneData;
+// 	    console.log("得到了所有的对象：");
+// 	    console.dir(jsonData);
+// });
+
+      // var getResponse = async function () {
+      //   try {
+      //     let response = await fetch(url, temp_data);
+      //     debugger
+      //     let data = await response.json();
+      //     lists = JSON.parse(data).items
+      //   } catch (error) {
+      //     console.log("出错了。。。", error);
+      //   }
+      // }
+
+      // 		getResponse()
+
+        $.ajax
+        ({
+            // url: "https://restapi.amap.com/v3/geocode/geo",
+            url: "http://localhost:8000/what",
+            type: "POST",
+            data: JSON.stringify({
+
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": "service"
+
+
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				$(".code_detail").text(res.code)
+                alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+    }
+</script>
+</html>
