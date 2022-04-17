@@ -67,7 +67,9 @@ def build_code_oo(web_config: ParamGo):
     # return  ""
     data_config = web_config.dict()
     # headers = {"Content-Type": "application/json"}
-    return codeInfo( code = build_java.build_code_main_process(data_config, data_config.get("type", "service")))
+    aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
+    aa =    aa.replace(" ", "&nbsp")
+    return codeInfo(code=aa)
 
 
 if __name__ == '__main__':

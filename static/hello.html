@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<div class="container">
 		<div class="row clearfix">
 			<div class="col-md-12 column">
@@ -56,7 +57,7 @@
 				<h3>
 					生成内容
 				</h3>
-				<p class="code_detail">
+				<p class="code_detail" style="line-height:40px">
 					生成code区域
 				</p>
 				<p>
@@ -101,19 +102,19 @@
         //     }, 
         //     'application/json'
         // );
-
-      var  url="http://127.0.0.1:8000/what"
-      var  temp_data =      {
-            			"sql_name": sql_name,
-            			"table_name": table_name,
-            			"select_columns":select_columns,
-            			"menu_list":menu_list,
-            			"mysql_host": mysql_host,
-            			"mysql_port": mysql_port,
-            			"mysql_root": mysql_root,
-            			"mysql_password": mysql_password,
-            			"type": "service"
-            		}
+	  //
+      // var  url="http://127.0.0.1:8000/what"
+      // var  temp_data =      {
+      //       			"sql_name": sql_name,
+      //       			"table_name": table_name,
+      //       			"select_columns":select_columns,
+      //       			"menu_list":menu_list,
+      //       			"mysql_host": mysql_host,
+      //       			"mysql_port": mysql_port,
+      //       			"mysql_root": mysql_root,
+      //       			"mysql_password": mysql_password,
+      //       			"type": "service"
+      //       		}
 
 
 
@@ -173,8 +174,8 @@
             contentType:'application/json; charset=utf-8',
             success:function(res){
 				debugger
-				$(".code_detail").text(res.code)
-                alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
+				$(".code_detail").html(res.code.replace(/\n/g, "<br>"))
+                // alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
                 console.log(res);  //在console中查看数据
             },
             error:function(){
