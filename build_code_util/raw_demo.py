@@ -130,7 +130,7 @@ def read_config(config_file_name = "config_info.txt"):
     for file_line in file_line_list:
 
         # 进行数据分隔
-        data_list =   split_config_data(file_line)
+        data_list = split_config_data(file_line)
         if data_list == None:
             continue
 

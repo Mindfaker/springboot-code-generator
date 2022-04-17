@@ -286,6 +286,40 @@ def exchange_format_dict_from_input_param(format_dict, input_param: dict, format
     return format_dict
 
 
+def check_connect(all_config_dict):
+    """
+
+    检查数据库连接是否成功
+
+    :param all_config_dict:
+    :return:
+    """
+    engine = get_connection(all_config_dict["sql_name"], all_config_dict["mysql_root"],
+                            all_config_dict["mysql_password"],
+                            all_config_dict["mysql_host"], all_config_dict["mysql_port"])
+    try:
+        engine.table_names()
+        return True
+    except Exception as e:
+        return False
+
+
+def get_table_structure(all_config_dict):
+    """
+
+    根据前端的数据  检查一个表的所有字段
+
+    :param all_config_dict:
+    :return:
+    """
+    engine = get_connection(all_config_dict["sql_name"], all_config_dict["mysql_root"],
+                            all_config_dict["mysql_password"],
+                            all_config_dict["mysql_host"], all_config_dict["mysql_port"])
+    table_name = all_config_dict["table_name"]
+    table_structure = get_mysql_structure(table_name, engine=engine)
+    return table_structure
+
+
 def build_code_main_process(all_config_dict, code_type):
     """
 
@@ -305,6 +339,9 @@ def build_code_main_process(all_config_dict, code_type):
 
     check_config_info()
     table_name = all_config_dict["table_name"]
+
+    get_table_all_name(all_config_dict)
+
     table_structure = get_mysql_structure(table_name, engine=engine)
 
     # 查询使用的字段名称
@@ -342,6 +379,54 @@ def build_code_main_process(all_config_dict, code_type):
         return ""
 
     return build_code(template=template, table_name=all_config_dict["table_name"], replace_dict=format_dict)
+
+
+# 切割每一条配置文件数据
+def split_config_data(config_line):
+    if ":" not in config_line:
+        return None
+
+    first_spilt_index = config_line.index(":")
+
+    # 没有配置的话
+    if config_line[first_spilt_index + 1: ].strip() == "":
+        return None
+
+    return [config_line[:first_spilt_index],   config_line[first_spilt_index + 1: ]]
+
+
+def read_config(config_file_name = "config_info.txt"):
+    """
+    读取解析配置文件
+    :param config_file_name:  配置文件的名称
+    :return:
+    """
+
+    # 如果配置文件不存在则返回空值
+    config_file_path = os.path.join(file_dir_path, config_file_name)
+    if not os.path.exists(config_file_path):
+        return None
+    config_data = {}
+    f = open(config_file_path, encoding="utf-8")
+    file_line_list = f.readlines()
+    for file_line in file_line_list:
+
+        # 进行数据分隔
+        data_list =   split_config_data(file_line)
+        if data_list == None:
+            continue
+
+        if data_list[0].strip() == "select_columns" or data_list[0].strip() == "unique_index_columns":
+            config_data["select_columns"] = list(map(lambda x: x.strip(), data_list[1].split(",")))
+        else:
+            config_data[data_list[0].strip()] = data_list[1].strip()
+    return config_data
+
+
+if __name__ == '__main__':
+    pass
+
+
 
 
 def read_config():

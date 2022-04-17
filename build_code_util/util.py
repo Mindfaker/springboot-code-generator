@@ -1,4 +1,5 @@
 
+
 def uppercase_word_first_letter(word):
     """
 
@@ -10,7 +11,7 @@ def uppercase_word_first_letter(word):
     return word[0].upper() + word[1:]
 
 
-def exchange_field_2_camel_case(sql_field_name, is_small = True):
+def exchange_field_2_camel_case(sql_field_name, is_small=True):
     """
 
     将_分隔编码转换成驼峰

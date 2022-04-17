@@ -4,7 +4,7 @@ import uvicorn
 from flask import Flask
 import json
 from flask import request, jsonify, make_response
-from flask_cors import *
+# from flask_cors import *
 from pydantic import BaseModel
 from build_code_util import build_java
 
@@ -46,6 +46,16 @@ async def root():
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
+
+@app.post("/check_connect")
+def check_connect(web_config: ParamGo):
+    return {"message": build_java.check_connect(web_config.dict())}
+
+
+
+@app.post("get_table_info")
+def get_table_info(web_config: ParamGo):
+    return {"message": build_java.get_table_structure(web_config.dict())}
 
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):

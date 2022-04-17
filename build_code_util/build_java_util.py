@@ -66,6 +66,7 @@ def exchange_field_2_camel_case(sql_field_name, is_small=True):
     return "".join(target_list)
 
 
+
 # 获取mysql 数据结构对象
 def get_mysql_structure(table_name):
     insp = reflection.Inspector.from_engine(engine)
