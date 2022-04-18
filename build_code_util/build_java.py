@@ -23,15 +23,15 @@ type_dict = {
 }
 
 logic_dict = {
-    "<class 'sqlalchemy.dialects.mysql.types.INTEGER'>": '\t\t        if ({little_camel_case} != null ) {'
+    "<class 'sqlalchemy.dialects.mysql.types.INTEGER'>": '\t\tif ({little_camel_case} != null ) {{'
                                                          '\r\n\tcriteria.and{big_camel_case}EqualTo({'
-                                                         'little_camel_case});\r\n}',
-    "<class 'sqlalchemy.dialects.mysql.types.TINYINT'>": '\t\t        if ({little_camel_case} != null ) {'
+                                                         'little_camel_case});\r\n}}',
+    "<class 'sqlalchemy.dialects.mysql.types.TINYINT'>": '\t\tif ({little_camel_case} != null ) {{'
                                                          '\r\n\tcriteria.and{big_camel_case}EqualTo({'
-                                                         'little_camel_case});\r\n}',
-    "<class 'sqlalchemy.dialects.mysql.types.VARCHAR'>": '\t\t        if (!StringUtils.isEmpty({little_camel_case})) '
-                                                         '{\r\n\tcriteria.and{big_camel_case}Like("%" + {'
-                                                         'little_camel_case} + "%");\r\n} '
+                                                         'little_camel_case});\r\n}}',
+    "<class 'sqlalchemy.dialects.mysql.types.VARCHAR'>": '\t\tif (!StringUtils.isEmpty({little_camel_case})) '
+                                                         '{{\r\n\tcriteria.and{big_camel_case}Like("%" + {'
+                                                         'little_camel_case} + "%");\r\n}} '
 }
 
 
@@ -177,7 +177,7 @@ def build_logic_list_str(columns_list, table_structure):
     """
     logic_str_list = list()
     for column in columns_list:
-        column_type = table_structure[column]['type']
+        column_type = type(table_structure[column]['type'])
         if str(column_type) in logic_dict.keys():
             logic_str_list.append(
                 logic_dict[str(column_type)].format(big_camel_case=exchange_field_2_camel_case(column, is_small=False),
@@ -340,7 +340,7 @@ def build_code_main_process(all_config_dict, code_type):
     check_config_info()
     table_name = all_config_dict["table_name"]
 
-    get_table_all_name(all_config_dict)
+    # get_table_all_name(all_config_dict)
 
     table_structure = get_mysql_structure(table_name, engine=engine)
 

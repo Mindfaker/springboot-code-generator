@@ -8,8 +8,10 @@ from flask import request, jsonify, make_response
 from pydantic import BaseModel
 from build_code_util import build_java
 
+
 class codeInfo(BaseModel):
     code: str
+
 
 class ParamGo(BaseModel):
     sql_name: str
@@ -21,6 +23,7 @@ class ParamGo(BaseModel):
     mysql_root: str
     mysql_password: str
     type: str
+
 
 app = FastAPI()
 # app = Flask(__name__)
@@ -52,10 +55,10 @@ def check_connect(web_config: ParamGo):
     return {"message": build_java.check_connect(web_config.dict())}
 
 
-
 @app.post("get_table_info")
 def get_table_info(web_config: ParamGo):
     return {"message": build_java.get_table_structure(web_config.dict())}
+
 
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):
@@ -78,11 +81,9 @@ def build_code_oo(web_config: ParamGo):
     data_config = web_config.dict()
     # headers = {"Content-Type": "application/json"}
     aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
-    aa =    aa.replace(" ", "&nbsp")
+    aa = aa.replace(" ", "&nbsp").replace("<", "&lt;").replace(">", "&gt;")
     return codeInfo(code=aa)
 
 
 if __name__ == '__main__':
     uvicorn.run(app, host='127.0.0.1', port=8000)
-
-
