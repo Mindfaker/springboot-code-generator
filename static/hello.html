@@ -20,10 +20,10 @@
 				</div>
 				<form role="form">
 					<div class="form-group">
-						 <label for="sql_name">数据库名称  </label><input type="text" class="form-control" id="sql_name" value="gs_gyh" />
+						 <label for="sql_name">数据库名称  </label><input type="text" class="form-control" id="sql_name" value="engine_user_center" />
 					</div>
 					<div class="form-group">
-						 <label for="table_name">数据表名称  </label><input type="text" class="form-control" id="table_name"  />
+						 <label for="table_name">数据表名称  </label><input type="text" class="form-control" id="table_name"  value="medal_youzan_vip_bind"/>
 					</div>
 
 					<div class="form-group">
@@ -40,12 +40,13 @@
 						 <label for="mysql_root">数据库账户  </label><input type="text" class="form-control" id="mysql_root" value="root"/>
 					</div>
 
-
-
 					<div class="form-group">
 						 <label for="mysql_password">数据库密码  </label><input type="text" class="form-control" id="mysql_password" value="Engine123s56.."/>
 					</div>
 
+					<input class="button" type="button" value="测试连接" onclick="testConnect()"/>
+
+					<input class="button" type="button" value="查看数据表结构" onclick="getTableInfo()"/>
 
 					<div class="form-group">
 						 <label for="menu_list"> 管理后台权限配置  </label><input type="text" class="form-control" id="menu_list" value="{'公共服务','勋章会员卡关系配置'}"/>
@@ -68,17 +69,100 @@
 					生成内容
 
 				</h3>
-<!--				<p class="code_detail" style="line-height:40px">-->
+				<p class="code_detail" style="line-height:40px">
 					<pre><code class="java">
-						<div id="codedetail" > </div>
+						<div> </div>
 					</code></pre>
-<!--				</p>-->
+				</p>
 			</div>
 		</div>
 	</div>
 
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
 <script type="text/javascript">
+		function getTableInfo() {
+		var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+		$.ajax
+        ({
+            url: "http://localhost:8000/get_table_info",
+            type: "POST",
+            data: JSON.stringify({
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				alert(res.message)
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+
+	}
+
+	function testConnect() {
+		var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+		$.ajax
+        ({
+            url: "http://localhost:8000/check_connect",
+            type: "POST",
+            data: JSON.stringify({
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				if (res.message) {
+					alert('连接成功！!');
+				} else {
+					alert('连接失败！ 连接超时或连接失败！')
+				}
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+
+	}
+
+
 	function showAdress() {	
         var sql_name = document.getElementById("sql_name").value;
         var table_name = document.getElementById("table_name").value;
@@ -89,82 +173,9 @@
         var menu_list = document.getElementById("menu_list").value;
         var select_columns = document.getElementById("select_columns").value;
 		var code_type = $('input:radio[name="code_type"]:checked').val();
-        // $.post
-        // (
-        //     // url: "https://restapi.amap.com/v3/geocode/geo",
-        //     "http://localhost:8000/what",
-        //      { 
-        //     		"web_config":{
-        //     			"sql_name": sql_name,
-        //     			"table_name": table_name,
-        //     			"select_columns":select_columns,
-        //     			"menu_list":menu_list,
-        //     			"mysql_host": mysql_host,
-        //     			"mysql_port": mysql_port,
-        //     			"mysql_root": mysql_root,
-        //     			"mysql_password": mysql_password,
-        //     			"type": "service"
-
-        //     		}	
-        //         },
-        //     function(res){
-        //         alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
-        //         console.log(res);  //在console中查看数据
-        //     }, 
-        //     'application/json'
-        // );
-	  //
-      // var  url="http://127.0.0.1:8000/what"
-      // var  temp_data =      {
-      //       			"sql_name": sql_name,
-      //       			"table_name": table_name,
-      //       			"select_columns":select_columns,
-      //       			"menu_list":menu_list,
-      //       			"mysql_host": mysql_host,
-      //       			"mysql_port": mysql_port,
-      //       			"mysql_root": mysql_root,
-      //       			"mysql_password": mysql_password,
-      //       			"type": "service"
-      //       		}
-
-
-
-
-//       fetch(url, {
-// 	    method: 'post', // 如果是get方式的话，只能把参数拼接在url里传过去，get方式不能有body
-// 	    "Access-Control-Allow-Origin" : "*",
-// 	    "Access-Control-Allow-Credentials" : true,
-// 	    headers: {
-// 	        'Content-Type': 'application/json'
-// 	    },
-// 	    body: JSON.stringify(temp_data) // 把你要传的数据放在这里转化成json
-// 	}).then(function (response) { // 处理返回回来的数据
-// 		debugger
-// 		$(".code_detail").text( response.json())
-//
-// 	}).then(function (respsoneData) {
-// 		debugger
-// 	    let jsonData = jQuery.type(respsoneData) == 'string' ? JSON.parse(respsoneData) : respsoneData;
-// 	    console.log("得到了所有的对象：");
-// 	    console.dir(jsonData);
-// });
-
-      // var getResponse = async function () {
-      //   try {
-      //     let response = await fetch(url, temp_data);
-      //     debugger
-      //     let data = await response.json();
-      //     lists = JSON.parse(data).items
-      //   } catch (error) {
-      //     console.log("出错了。。。", error);
-      //   }
-      // }
-
-      // 		getResponse()
 
         $.ajax
         ({
-            // url: "https://restapi.amap.com/v3/geocode/geo",
             url: "http://localhost:8000/what",
             type: "POST",
             data: JSON.stringify({
@@ -183,18 +194,11 @@
             contentType:'application/json; charset=utf-8',
             success:function(res){
 				debugger
-				// $(".code_detail").html(res.code.replace(/\n/g, "<br>"))
-				var obj = document.getElementById("codedetail");
-    			obj.innerHTML= res.code;
+				$(".code_detail").html(res.code.replace(/\n/g, "<br>"))
+				// var obj = document.getElementById("codedetail");
+    			// obj.innerHTML= res.code;
                 // alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
                 console.log(res);  //在console中查看数据
-				// hljs.initHighlightingOnLoad();
-				// setTimeout(function () {
-				// 	hljs.initHighlighting();
-				// 	hljs.initHighlightingOnLoad();
-				// }, 2000)
-
-
             },
             error:function(){
                 alert('failed!');

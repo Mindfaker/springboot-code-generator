@@ -13,6 +13,15 @@ class codeInfo(BaseModel):
     code: str
 
 
+class CommonCheckParam(BaseModel):
+    mysql_host: str
+    mysql_port: int
+    mysql_root: str
+    mysql_password: str
+    sql_name: str
+    table_name: str = None
+
+
 class ParamGo(BaseModel):
     sql_name: str
     table_name: str
@@ -51,35 +60,19 @@ async def say_hello(name: str):
 
 
 @app.post("/check_connect")
-def check_connect(web_config: ParamGo):
+def check_connect(web_config: CommonCheckParam):
     return {"message": build_java.check_connect(web_config.dict())}
 
 
-@app.post("get_table_info")
-def get_table_info(web_config: ParamGo):
+@app.post("/get_table_info")
+def get_table_info(web_config: CommonCheckParam):
     return {"message": build_java.get_table_structure(web_config.dict())}
 
 
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):
     web_config.dict()
-    # aa = UserOut()
-    # aa.email = "liu_cheng_jiu@163.com"
-    # aa.username = "faker"
-    # return web_config
-    # return aa
-    # if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
-    #     print("hello")
-    # elif request.headers.get('Content-Type') == 'application/json':
-    #     r = request.json
-    # print(request.form.get("type"))
-    # print(request.form)
-    # print(request.stream.read())
-    # data = request.get_json()
-    # print(data)
-    # return  ""
     data_config = web_config.dict()
-    # headers = {"Content-Type": "application/json"}
     aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
     aa = aa.replace(" ", "&nbsp").replace("<", "&lt;").replace(">", "&gt;")
     return codeInfo(code=aa)
