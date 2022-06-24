@@ -10,12 +10,8 @@ public class {big_camel_case}Service
     @Resource
     {big_camel_case}Mapper {little_camel_case}Mapper;
 
-    public {big_camel_case} selectDuplicateIndex({duplicate_param}) {
-        {big_camel_case}Example example = new {big_camel_case}Example();
-        {big_camel_case}Example.Criteria criteria = example.createCriteria();
-        {duplicate_logic}
-        return {little_camel_case}Mapper.selectOneByExample(example);
-    }
+    // 唯一索引的查询方法
+{unique_index_select_logic}
 
 
     public Map select({select_param} , Integer page, Integer limit, String sort, String order) {

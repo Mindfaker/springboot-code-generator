@@ -1,0 +1,6 @@
+    public {big_camel_case}  {index_name}DuplicateIndex({duplicate_param}) {
+        {big_camel_case}Example example = new {big_camel_case}Example();
+        {big_camel_case}Example.Criteria criteria = example.createCriteria();
+        {duplicate_logic}
+        return {little_camel_case}Mapper.selectOneByExample(example);
+    }

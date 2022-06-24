@@ -7,6 +7,7 @@ from flask import request, jsonify, make_response
 # from flask_cors import *
 from pydantic import BaseModel
 from build_code_util import build_java
+from build_unique_index_code import *
 
 
 class codeInfo(BaseModel):
@@ -66,11 +67,27 @@ def check_connect(web_config: CommonCheckParam):
 
 @app.post("/get_table_info")
 def get_table_info(web_config: CommonCheckParam):
-    return {"message": build_java.get_table_structure(web_config.dict())}
+    engine = build_java.get_connection(web_config.sql_name, web_config.mysql_root,
+                                       web_config.mysql_password, web_config.mysql_host, web_config.mysql_port)
+
+    table_structure = build_java.get_table_structure(web_config.dict())
+    unique_columns_list = build_java.get_duplicate_columns_list(web_config.table_name, engine=engine)
+
+    return build_unique_select_func(unique_columns_list, web_config.table_name, table_structure, 1)
+    # return {"message": build_java.get_table_structure(web_config.dict())}
 
 
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):
+    # engine = build_java.get_connection(web_config.sql_name, web_config.mysql_root,
+    #                                    web_config.mysql_password, web_config.mysql_host, web_config.mysql_port)
+    #
+    # table_structure = build_java.get_table_structure(web_config.dict())
+    # unique_columns_list = build_java.get_duplicate_columns_list(web_config.table_name, engine=engine)
+    #
+    # kk = build_unique_select_func(unique_columns_list[0], web_config.table_name, table_structure, 1)
+    # print(kk)
+
     web_config.dict()
     data_config = web_config.dict()
     aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
