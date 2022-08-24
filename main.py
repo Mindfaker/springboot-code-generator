@@ -1,6 +1,13 @@
 from fastapi import FastAPI, responses
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
+import sys
+
+# 添加包引入
+dir_mytest = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, dir_mytest)
+
 from flask import Flask
 import json
 from flask import request, jsonify, make_response
