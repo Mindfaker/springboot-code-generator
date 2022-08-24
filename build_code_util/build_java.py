@@ -59,10 +59,9 @@ def get_template_path():
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "code_template")
 
 
-#  初始化   服务的模板    后台的模板    唯一索引的关系模板
+# 服务的模板  和  后台的模板
 SERVICE_TEMPLATE = read_template("service_template")
 ADMIN_TEMPLATE = read_template("admin_controller_template")
-UNIQUE_INDEX_SELECT_TEMPLATE = read_template("unique_index_select_template")
 
 
 def get_connection(sql_name, root='engine', password='Engine123S56^&*enginE',
@@ -123,13 +122,11 @@ def get_duplicate_columns_list(table_name, engine) -> list:
     index_list = insp.get_indexes(table_name)
     index_list = [x["column_names"] for x in index_list if x["type"] == "UNIQUE"]
 
-    return index_list
-
-    # #  TODO 目前只完成一个唯一索引的开发
-    # if len(index_list) == 0:
-    #     return None
-    # else:
-    #     return index_list[0]
+    #  TODO 目前只完成一个唯一索引的开发
+    if len(index_list) == 0:
+        return None
+    else:
+        return index_list[0]
 
 
 def build_param_list_str(columns_list, table_structure: dict):
@@ -207,32 +204,6 @@ def build_duplicate_admin_case_param(table_name, duplicate_columns_list):
     return ",  ".join(duplicate_admin_list)
 
 
-# TODO 待完善----------
-def build_unique_select_func(duplicate_columns_list, format_context, table_structure: dict, index_num: int):
-    """
-
-    根据一组唯一索引的字段组合  完成一组唯一索引查询字段的服务链接
-
-    :param index_num:  唯一索引所在的序列号
-    :param table_structure: 表的字段结构
-    :param duplicate_columns_list:   唯一索引的键的组合
-    :param format_context:  上游已经存在的替换map
-    :return:  一段唯一索引的检索逻辑
-    """
-    logic_duplicate_columns_list = [x for x in duplicate_columns_list if x != "deleted"]
-
-    logic_list = list()
-    logic_format_str = ".and{big_camel_case}EqualTo({little_camel_case})"
-    for column in logic_duplicate_columns_list:
-        logic_list.append(logic_format_str.format(little_camel_case=exchange_field_2_camel_case(column),
-                                                  big_camel_case=exchange_field_2_camel_case(column, False)))
-    duplicate_logic = "\t\tcriteria.andDeletedEqualTo(false)" + "".join(logic_list) + ";"
-
-    duplicate_param = build_param_list_str(logic_duplicate_columns_list, table_structure)
-
-    UNIQUE_INDEX_SELECT_TEMPLATE
-
-
 def build_duplicate_logic(duplicate_columns_list):
     """
 
@@ -250,16 +221,15 @@ def build_duplicate_logic(duplicate_columns_list):
     return "\t\tcriteria.andDeletedEqualTo(false)" + "".join(logic_list) + ";"
 
 
-def check_line_have_placeholder(line, customer_placeholder_list):
+def check_line_have_placeholder(line):
     """
 
     检查一行模板是否有  占位符
 
-    :param customer_placeholder_list: 自定义的占位符列表
-    :param line: 一行模板
+    :param line:
     :return:
     """
-    for placeholder in customer_placeholder_list:
+    for placeholder in placeholder_list:
         if placeholder in line:
             return True
     return False
@@ -277,7 +247,7 @@ def build_code(template, table_name, replace_dict):
     """
     code_list = list()
     for line in template:
-        if check_line_have_placeholder(line, placeholder_list):
+        if check_line_have_placeholder(line):
             code_list.append(line
                              .replace("{big_camel_case}", exchange_field_2_camel_case(table_name, is_small=False))
                              .replace("{little_camel_case}", exchange_field_2_camel_case(table_name))
@@ -350,25 +320,6 @@ def get_table_structure(all_config_dict):
     return table_structure
 
 
-def build_unique_index_service(input_unique_index_list, table_name, engine):
-    if input_unique_index_list is None:
-        input_unique_index_list = get_duplicate_columns_list(table_name, engine)
-
-    if len(input_unique_index_list) == 0:
-        return ""
-
-    #  过滤唯一索引  生成逻辑代码  对应的字段组合
-    select_condition_unique_index_list = []
-    for unique_index in input_unique_index_list:
-        unique_index.remove("deleted")
-        if len(unique_index) > 0:
-            select_condition_unique_index_list.append(unique_index)
-
-    unique_select_code_list = []
-    for select_condition_unique_index in select_condition_unique_index_list:
-        unique_select_code = build_duplicate_logic(select_condition_unique_index)
-
-
 def build_code_main_process(all_config_dict, code_type):
     """
 
@@ -405,17 +356,17 @@ def build_code_main_process(all_config_dict, code_type):
     else:
         unique_columns_list = parse_param_to_list(all_config_dict.get("unique_index_columns"))
 
-    unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
+    if unique_columns_list is not None:
+            unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
 
     # 生成填充模板需要的参数
     format_dict["param_list_str"] = build_param_list_str(columns_list, table_structure)
     format_dict["logic_list_str"] = build_logic_list_str(columns_list, table_structure)
     format_dict["admin_select_param"] = build_admin_param_list_str(columns_list, table_structure)
-    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure)
-    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure)
-    format_dict["duplicate_admin_case_param"] = \
-        build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
-    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)
+    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] =build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
+    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)  if unique_columns_list is not None else ""
     format_dict["param_list"] = ",".join([exchange_field_2_camel_case(x) for x in columns_list])
 
     format_dict = exchange_format_dict_from_input_param(format_dict, all_config_dict, config_param_list)
@@ -438,13 +389,13 @@ def split_config_data(config_line):
     first_spilt_index = config_line.index(":")
 
     # 没有配置的话
-    if config_line[first_spilt_index + 1:].strip() == "":
+    if config_line[first_spilt_index + 1: ].strip() == "":
         return None
 
-    return [config_line[:first_spilt_index], config_line[first_spilt_index + 1:]]
+    return [config_line[:first_spilt_index],   config_line[first_spilt_index + 1: ]]
 
 
-def read_config(config_file_name="config_info.txt"):
+def read_config(config_file_name = "config_info.txt"):
     """
     读取解析配置文件
     :param config_file_name:  配置文件的名称
@@ -461,8 +412,8 @@ def read_config(config_file_name="config_info.txt"):
     for file_line in file_line_list:
 
         # 进行数据分隔
-        data_list = split_config_data(file_line)
-        if data_list is None:
+        data_list =   split_config_data(file_line)
+        if data_list == None:
             continue
 
         if data_list[0].strip() == "select_columns" or data_list[0].strip() == "unique_index_columns":
@@ -470,6 +421,12 @@ def read_config(config_file_name="config_info.txt"):
         else:
             config_data[data_list[0].strip()] = data_list[1].strip()
     return config_data
+
+
+if __name__ == '__main__':
+    pass
+
+
 
 
 def read_config():

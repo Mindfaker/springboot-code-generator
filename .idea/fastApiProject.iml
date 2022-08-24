@@ -5,8 +5,9 @@
       <sourceFolder url="file://$MODULE_DIR$/build_code_util" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/config" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/util" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 (pythonProject1)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (java_build_project)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

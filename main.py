@@ -1,38 +1,21 @@
 from fastapi import FastAPI, responses
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
+import sys
+
+# 添加包引入
+dir_mytest = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, dir_mytest)
+
 from flask import Flask
 import json
 from flask import request, jsonify, make_response
 # from flask_cors import *
 from pydantic import BaseModel
 from build_code_util import build_java
-from build_unique_index_code import *
-
-
-class codeInfo(BaseModel):
-    code: str
-
-
-class CommonCheckParam(BaseModel):
-    mysql_host: str
-    mysql_port: int
-    mysql_root: str
-    mysql_password: str
-    sql_name: str
-    table_name: str = None
-
-
-class ParamGo(BaseModel):
-    sql_name: str
-    table_name: str
-    select_columns: str
-    menu_list: str
-    mysql_host: str
-    mysql_port: int
-    mysql_root: str
-    mysql_password: str
-    type: str
+from generic_object import *
+from clickhouse_selecter import SelectClickhouseData
 
 
 app = FastAPI()
@@ -67,32 +50,23 @@ def check_connect(web_config: CommonCheckParam):
 
 @app.post("/get_table_info")
 def get_table_info(web_config: CommonCheckParam):
-    engine = build_java.get_connection(web_config.sql_name, web_config.mysql_root,
-                                       web_config.mysql_password, web_config.mysql_host, web_config.mysql_port)
-
-    table_structure = build_java.get_table_structure(web_config.dict())
-    unique_columns_list = build_java.get_duplicate_columns_list(web_config.table_name, engine=engine)
-
-    return build_unique_select_func(unique_columns_list, web_config.table_name, table_structure, 1)
-    # return {"message": build_java.get_table_structure(web_config.dict())}
+    return {"message": build_java.get_table_structure(web_config.dict())}
 
 
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):
-    # engine = build_java.get_connection(web_config.sql_name, web_config.mysql_root,
-    #                                    web_config.mysql_password, web_config.mysql_host, web_config.mysql_port)
-    #
-    # table_structure = build_java.get_table_structure(web_config.dict())
-    # unique_columns_list = build_java.get_duplicate_columns_list(web_config.table_name, engine=engine)
-    #
-    # kk = build_unique_select_func(unique_columns_list[0], web_config.table_name, table_structure, 1)
-    # print(kk)
-
     web_config.dict()
     data_config = web_config.dict()
     aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
     aa = aa.replace(" ", "&nbsp").replace("<", "&lt;").replace(">", "&gt;")
     return codeInfo(code=aa)
+
+
+@app.post("/select_data_by_ck")
+def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
+    conn_setting = {'host': "cdh5", 'user': 'root', 'password': 'Engine1314enginE'}
+    ck = SelectClickhouseData(conn_setting, sql_filter_condition=sql_condition)
+    return codeInfo(code=ck.select_data_from_db())
 
 
 if __name__ == '__main__':
