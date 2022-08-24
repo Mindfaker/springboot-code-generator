@@ -36,10 +36,3 @@ class MySqlChangeLogCondition(BaseModel):
     page: int
     size: int
 
-
-# clickhouse 的连接参数
-class CKConnectionSetting(object):
-    host: str
-    user: str
-    password: str
-

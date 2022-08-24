@@ -8,6 +8,7 @@ from flask import request, jsonify, make_response
 from pydantic import BaseModel
 from build_code_util import build_java
 from generic_object import *
+from clickhouse_selecter import SelectClickhouseData
 
 
 app = FastAPI()
@@ -56,8 +57,9 @@ def build_code_oo(web_config: ParamGo):
 
 @app.post("/select_data_by_ck")
 def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
-    sql_condition.dict()
-    pass
+    conn_setting = {'host': "cdh5", 'user': 'root', 'password': 'Engine1314enginE'}
+    ck = SelectClickhouseData(conn_setting, sql_filter_condition=sql_condition)
+    return codeInfo(code=ck.select_data_from_db())
 
 
 if __name__ == '__main__':
