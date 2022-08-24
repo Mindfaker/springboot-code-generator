@@ -7,31 +7,7 @@ from flask import request, jsonify, make_response
 # from flask_cors import *
 from pydantic import BaseModel
 from build_code_util import build_java
-
-
-class codeInfo(BaseModel):
-    code: str
-
-
-class CommonCheckParam(BaseModel):
-    mysql_host: str
-    mysql_port: int
-    mysql_root: str
-    mysql_password: str
-    sql_name: str
-    table_name: str = None
-
-
-class ParamGo(BaseModel):
-    sql_name: str
-    table_name: str
-    select_columns: str
-    menu_list: str
-    mysql_host: str
-    mysql_port: int
-    mysql_root: str
-    mysql_password: str
-    type: str
+from generic_object import *
 
 
 app = FastAPI()
@@ -76,6 +52,12 @@ def build_code_oo(web_config: ParamGo):
     aa = build_java.build_code_main_process(data_config, data_config.get("type", "service"))
     aa = aa.replace(" ", "&nbsp").replace("<", "&lt;").replace(">", "&gt;")
     return codeInfo(code=aa)
+
+
+@app.post("/select_data_by_ck")
+def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
+    sql_condition.dict()
+    pass
 
 
 if __name__ == '__main__':

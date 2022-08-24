@@ -356,17 +356,17 @@ def build_code_main_process(all_config_dict, code_type):
     else:
         unique_columns_list = parse_param_to_list(all_config_dict.get("unique_index_columns"))
 
-    unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
+    if unique_columns_list is not None:
+            unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
 
     # 生成填充模板需要的参数
     format_dict["param_list_str"] = build_param_list_str(columns_list, table_structure)
     format_dict["logic_list_str"] = build_logic_list_str(columns_list, table_structure)
     format_dict["admin_select_param"] = build_admin_param_list_str(columns_list, table_structure)
-    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure)
-    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure)
-    format_dict["duplicate_admin_case_param"] =\
-        build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
-    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)
+    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] =build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
+    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)  if unique_columns_list is not None else ""
     format_dict["param_list"] = ",".join([exchange_field_2_camel_case(x) for x in columns_list])
 
     format_dict = exchange_format_dict_from_input_param(format_dict, all_config_dict, config_param_list)
