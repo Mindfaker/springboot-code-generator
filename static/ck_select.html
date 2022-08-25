@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/languages/go.min.js"></script>-->
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+
+<script>
+ hljs.initHighlightingOnLoad();
+</script>
+
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<div class="container">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				<div class="page-header">
+				</div>
+				<form role="form">
+					<div class="form-group">
+						数据库名称<select name="mysql_db_name">
+							<option value="df_gyh">刀锋戈友圈</option>
+							<option value="yq_gyh">戈友圈</option>
+							<option value="user_center_info" selected>用户中心</option>
+						</select>
+					</div>
+					<div class="form-group">
+						数据表名称<select name="mysql_db_name">
+							<option value="wx_user">用户信息表</option>
+							<option value="wx_order">报名订单表</option>
+							<option value="wx_gobi_member_info" selected>参赛者信息库</option>
+						</select>
+					</div>
+
+					<div class="form-group">
+						 <input type="checkbox" name="change_type" value="0">数据库结构变化或MYSQL自身事务<input type="checkbox" name="change_type" value="1">修改数据及逻辑删除<input type="checkbox" name="change_type" value="2">创建数据<input type="checkbox" name="change_type" value="3">物理删除数据
+					</div>
+
+
+					<div class="form-group">
+						 <label for="sql_detail">查询内容（输入任意表中任意信息都可以）  </label><input type="text" class="form-control" id="sql_detail" value=""/>
+					</div>
+
+
+					<div class="form-group">
+						 <label for="page">页码  </label><input type="text" class="form-control" id="page" value="1"/>
+					</div>
+
+					<div class="form-group">
+						 <label for="size">单页数量  </label><input type="text" class="form-control" id="size" value="20"/>
+					</div>
+
+					<input class="button" type="button" value="测试连接" onclick="testConnect()"/>
+
+					<input class="button" type="button" value="查看数据表结构" onclick="getTableInfo()"/>
+
+					<div class="form-group">
+						 <label for="menu_list"> 管理后台权限配置  </label><input type="text" class="form-control" id="menu_list" value="{'公共服务','勋章会员卡关系配置'}"/>
+					</div>
+
+					<div class="form-group">
+						 <label for="select_columns">管理后台查询条件字段  </label><input type="text" class="form-control" id="select_columns" value="youzan_vip_id, medal_id"/>
+					</div>
+
+
+					<div class="radio">
+						 <label><input type="radio" name="code_type" id="serviceCode" value="service"/>serviceCode</label>
+						 <label><input type="radio" name="code_type" id="adminCode" value="admin"/>adminCode</label>
+					</div>
+			<!-- 		 <button type="submit" class="btn btn-default">生成</button> -->
+					 <input class="button" type="button" value="生成" onclick="showAdress()"/>
+				</form>
+				<h3>
+
+					生成内容
+
+				</h3>
+				<p class="code_detail" style="line-height:40px">
+					<pre><code class="java">
+						<div> </div>
+					</code></pre>
+				</p>
+			</div>
+		</div>
+	</div>
+
+<table border="1">
+<tr>
+  <th>First Name:</th>
+  <td>Bill Gates</td>
+</tr>
+<tr>
+  <th rowspan="2">Telephone:</th>
+  <td>555 77 854</td>
+</tr>
+<tr>
+  <td>555 77 855</td>
+</tr>
+</table>
+
+<script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js"></script>
+<script type="text/javascript">
+		function getTableInfo() {
+		var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+		$.ajax
+        ({
+            url: "http://localhost:8000/get_table_info",
+            type: "POST",
+            data: JSON.stringify({
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				alert(res.message)
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+
+	}
+
+	function testConnect() {
+		var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+		$.ajax
+        ({
+            url: "http://localhost:8000/check_connect",
+            type: "POST",
+            data: JSON.stringify({
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				if (res.message) {
+					alert('连接成功！!');
+				} else {
+					alert('连接失败！ 连接超时或连接失败！')
+				}
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+
+	}
+
+
+	function showAdress() {	
+        var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+
+        $.ajax
+        ({
+            url: "http://localhost:8000/what",
+            type: "POST",
+            data: JSON.stringify({
+
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				$(".code_detail").html(res.code.replace(/\n/g, "<br>"))
+				// var obj = document.getElementById("codedetail");
+    			// obj.innerHTML= res.code;
+                // alert(res.geocodes[0].formatted_address+"经纬度："+res.geocodes[0].location);
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+    }
+</script>
+</html>
