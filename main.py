@@ -8,11 +8,6 @@ import sys
 dir_mytest = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, dir_mytest)
 
-from flask import Flask
-import json
-from flask import request, jsonify, make_response
-# from flask_cors import *
-from pydantic import BaseModel
 from build_code_util import build_java
 from generic_object import *
 from clickhouse_selecter import SelectClickhouseData
@@ -53,6 +48,16 @@ def get_table_info(web_config: CommonCheckParam):
     return {"message": build_java.get_table_structure(web_config.dict())}
 
 
+@app.post("/get_db_list")
+def get_db_list():
+    return {"data": build_java.get_db_list_by_default("")}
+
+
+@app.post("/get_table_list")
+def get_table_list(table: SelectTableList):
+    return {"data": build_java.get_db_list_by_default(table.db_name)}
+
+
 @app.post("/what")
 def build_code_oo(web_config: ParamGo):
     web_config.dict()
@@ -70,4 +75,4 @@ def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host='127.0.0.1', port=9096)
