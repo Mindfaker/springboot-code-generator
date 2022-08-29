@@ -14,6 +14,10 @@ class CommonCheckParam(BaseModel):
     table_name: str = None
 
 
+class SelectTableList(BaseModel):
+    db_name: str
+
+
 class ParamGo(BaseModel):
     sql_name: str
     table_name: str

@@ -2,7 +2,7 @@ import os
 import sys
 import pymysql
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import reflection
 
 admin_root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "util")
@@ -79,6 +79,32 @@ def get_connection(sql_name, root='engine', password='Engine123S56^&*enginE',
     """
     engine = create_engine("mysql+pymysql://{}:{}@{}:{}/{}".format(root, password, host, port, sql_name))
     return engine
+
+
+def get_db_list_by_default(db_name, root='engine', password='Engine123S56^&*enginE',
+                           host='rm-8vb7856yl4b5q1kf9yo.mysql.zhangbei.rds.aliyuncs.com', port='3306',
+                           ):
+    """
+
+    获取默认正式服数据库的数据库列表
+
+    :param db_name:  数据库的名称
+    :param root:  数据库的账号
+    :param password:  数据库的密码
+    :param host:  数据库的IP
+    :param port:  数据库的端口
+    :return:
+    """
+    engine = create_engine("mysql+pymysql://{}:{}@{}:{}".format(root, password, host, port), pool_recycle=7200)
+    insp = engine.inspect()
+    db_list = insp.get_schema_names()
+    if db_name is None or db_name == "":
+        return db_list
+    else:
+        if db_name not in db_list:
+            return None
+        else:
+            return insp.get_table_names(schema=db_name)
 
 
 def get_mysql_structure(table_name, engine):
@@ -357,16 +383,20 @@ def build_code_main_process(all_config_dict, code_type):
         unique_columns_list = parse_param_to_list(all_config_dict.get("unique_index_columns"))
 
     if unique_columns_list is not None:
-            unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
+        unique_columns_list = [x for x in unique_columns_list if x != "deleted"]
 
     # 生成填充模板需要的参数
     format_dict["param_list_str"] = build_param_list_str(columns_list, table_structure)
     format_dict["logic_list_str"] = build_logic_list_str(columns_list, table_structure)
     format_dict["admin_select_param"] = build_admin_param_list_str(columns_list, table_structure)
-    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
-    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list, table_structure) if unique_columns_list is not None else ""
-    format_dict["duplicate_admin_case_param"] =build_duplicate_admin_case_param(table_name=table_name, duplicate_columns_list=unique_columns_list)
-    format_dict["duplicate_logic"] = build_duplicate_logic(unique_columns_list)  if unique_columns_list is not None else ""
+    format_dict["duplicate_param"] = build_param_list_str(unique_columns_list,
+                                                          table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] = build_admin_param_list_str(unique_columns_list,
+                                                                           table_structure) if unique_columns_list is not None else ""
+    format_dict["duplicate_admin_case_param"] = build_duplicate_admin_case_param(table_name=table_name,
+                                                                                 duplicate_columns_list=unique_columns_list)
+    format_dict["duplicate_logic"] = build_duplicate_logic(
+        unique_columns_list) if unique_columns_list is not None else ""
     format_dict["param_list"] = ",".join([exchange_field_2_camel_case(x) for x in columns_list])
 
     format_dict = exchange_format_dict_from_input_param(format_dict, all_config_dict, config_param_list)
@@ -389,13 +419,13 @@ def split_config_data(config_line):
     first_spilt_index = config_line.index(":")
 
     # 没有配置的话
-    if config_line[first_spilt_index + 1: ].strip() == "":
+    if config_line[first_spilt_index + 1:].strip() == "":
         return None
 
-    return [config_line[:first_spilt_index],   config_line[first_spilt_index + 1: ]]
+    return [config_line[:first_spilt_index], config_line[first_spilt_index + 1:]]
 
 
-def read_config(config_file_name = "config_info.txt"):
+def read_config(config_file_name="config_info.txt"):
     """
     读取解析配置文件
     :param config_file_name:  配置文件的名称
@@ -412,7 +442,7 @@ def read_config(config_file_name = "config_info.txt"):
     for file_line in file_line_list:
 
         # 进行数据分隔
-        data_list =   split_config_data(file_line)
+        data_list = split_config_data(file_line)
         if data_list == None:
             continue
 
@@ -425,8 +455,6 @@ def read_config(config_file_name = "config_info.txt"):
 
 if __name__ == '__main__':
     pass
-
-
 
 
 def read_config():
