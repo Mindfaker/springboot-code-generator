@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/languages/go.min.js"></script>-->
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+<script>
+ hljs.initHighlightingOnLoad();
+</script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<div class="container">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				<div class="page-header">
+					<h1>
+					</h1>
+				</div>
+				<form role="form">
+					<fieldset>
+						<legend>查询条件</legend>
+					数据库名称  <select name="dbName" id="dbName" onclick="get_db_list()">
+						<option value="df_gyh">刀锋戈友圈</option>
+						<option value="yq_gyh" selected>戈友圈</option>
+					</select><br>
+
+						数据表名称  <select name="table_name" class="table_name" id="table_name">
+						<option value="wx_user">用户信息表</option>
+						<option value="wx_order" selected>用户订单表</option>
+						<option value="wx_gobi_member_info">参赛者信息库</option>
+						<option value="admin_admin">管理后台信息表</option>
+					</select>
+					<br>
+					数据变化类型
+					<input type="checkbox" name="changeType" value="0">数据库结构变化或MYSQL自身事务
+					<input type="checkbox" name="changeType" value="1" checked>修改数据及逻辑删除
+					<input type="checkbox" name="changeType" value="2" checked>创建数据
+					<input type="checkbox" name="changeType" value="3" checked>物理删除数据
+
+					<div class="form-group">
+						 <label for="sql_detail">SQL内容</label><input type="text" class="form-control" id="sql_detail" />
+					</div>
+
+
+					<input class="button" type="button" value="查看数据表结构" onclick="getTableInfo()"/>
+
+					<input class="button" type="button" value="测试变动数据" onclick="justTest()"/>
+
+					 </fieldset>
+				</form>
+
+				<table border="1" class="target_table" id="ck_result_table">
+					<caption>数据查询结果</caption>
+					  <tr>
+						<th>数据库</th>
+						<th>数据表</th>
+						<th>变动类型</th>
+					    <th>数据表</th>
+						<th>变动时间</th>
+						<th>数据变动情况</th>
+						<th>事务起始ID</th>
+						<th>事务结束ID</th>
+						<th>执行SQL</th>
+					  </tr>
+					<tr>
+						<td>row 1, cell 1</td>
+						<td>row 1, cell 2</td>
+					</tr>
+					<tr>
+						<td>row 2, cell 1</td>
+						<td>row 2, cell 2</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+<body></body>
+
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+<script type="text/javascript">
+	function justTest() {
+		var replace_data_info = "<option value=\"wx_user\">用户信息表1111</option><option value=\"wx_order\">用户订单表</option>" +
+				"\t\t\t\t\t\t<option value=\"wx_gobi_member_info\">参赛者信息库</option>\n" +
+				"\t\t\t\t\t\t<option value=\"admin_admin\">管理后台信息表</option>"
+		$("#table_name").html(replace_data_info)
+	}
+
+	function queryChangeLog() {
+
+	}
+
+	function testConnect() {
+		var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+		$.ajax
+        ({
+            url: "https://base.exploring.cn/mysql-binlog-query-server/check_connect",
+            type: "POST",
+            data: JSON.stringify({
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+				if (res.message) {
+					alert('连接成功！!');
+				} else {
+					alert('连接失败！ 连接超时或连接失败！')
+				}
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+
+	}
+
+	function get_db_list() {
+		$.ajax
+        ({
+            url: " http://127.0.0.1:9096/get_db_list",
+            type: "POST",
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+            	$("#dbName").html("")
+            	debugger
+				for (var db_info in res.data) {
+					$("#dbName").append("<option value='" + db_info[0] + "'>"+ db_info[1]+ "</option>")
+				}
+				// $("#dbName").html(res.code.replace(/\n/g, "<br>"))
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+	}
+
+
+	function showAdress() {
+        var sql_name = document.getElementById("sql_name").value;
+        var table_name = document.getElementById("table_name").value;
+        var mysql_host = document.getElementById("mysql_host").value;
+        var mysql_port = document.getElementById("mysql_port").value;
+        var mysql_root = document.getElementById("mysql_root").value;
+        var mysql_password = document.getElementById("mysql_password").value;
+        var menu_list = document.getElementById("menu_list").value;
+        var select_columns = document.getElementById("select_columns").value;
+		var code_type = $('input:radio[name="code_type"]:checked').val();
+
+        $.ajax
+        ({
+            url: "https://base.exploring.cn/mysql-binlog-query-server/what",
+            type: "POST",
+            data: JSON.stringify({
+
+            			"sql_name": sql_name,
+            			"table_name": table_name,
+            			"select_columns":select_columns,
+            			"menu_list":menu_list,
+            			"mysql_host": mysql_host,
+            			"mysql_port": mysql_port,
+            			"mysql_root": mysql_root,
+            			"mysql_password": mysql_password,
+            			"type": code_type
+                }),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				$(".code_detail").html(res.code.replace(/\n/g, "<br>"))
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
+    }
+</script>
+</html>

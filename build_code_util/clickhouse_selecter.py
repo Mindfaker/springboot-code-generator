@@ -1,6 +1,6 @@
 from clickhouse_driver import connect, Client
 from pydantic import BaseModel
-from generic_object import MySqlChangeLogCondition, CKConnectionSetting
+from generic_object import MySqlChangeLogCondition
 import time
 
 

@@ -95,11 +95,19 @@ def get_db_list_by_default(db_name, root='engine', password='Engine123S56^&*engi
     :param port:  数据库的端口
     :return:
     """
+    db_format_dict = {"yq_gyh": "戈友圈", "df_gyh": "刀锋", "engine_user_center": "用户中心"}
     engine = create_engine("mysql+pymysql://{}:{}@{}:{}".format(root, password, host, port), pool_recycle=7200)
-    insp = engine.inspect()
+    insp = reflection.Inspector.from_engine(engine)
     db_list = insp.get_schema_names()
+    # 对数据库相关的数据进行处理
     if db_name is None or db_name == "":
-        return db_list
+        target_db_data = []
+        for db_name in db_list:
+            if db_name in db_format_dict.keys():
+                target_db_data.append([db_name, db_format_dict[db_name]])
+            else:
+                target_db_data.append([db_name, db_name])
+        return target_db_data
     else:
         if db_name not in db_list:
             return None
