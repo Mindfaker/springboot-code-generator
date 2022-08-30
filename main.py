@@ -5,7 +5,7 @@ import os
 import sys
 
 # 添加包引入
-dir_mytest = os.path.dirname(os.path.abspath(__file__))
+dir_mytest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build_code_util")
 sys.path.insert(0, dir_mytest)
 
 from build_code_util import build_java

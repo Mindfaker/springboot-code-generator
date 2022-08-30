@@ -78,7 +78,7 @@
 		</div>
 	</div>
 
-<script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <script type="text/javascript">
 		function getTableInfo() {
 		var sql_name = document.getElementById("sql_name").value;
@@ -92,7 +92,7 @@
 		var code_type = $('input:radio[name="code_type"]:checked').val();
 		$.ajax
         ({
-            url: "http://localhost:8000/get_table_info",
+            url: "https://base.exploring.cn/mysql-binlog-query-server/get_table_info",
             type: "POST",
             data: JSON.stringify({
             			"sql_name": sql_name,
@@ -131,7 +131,7 @@
 		var code_type = $('input:radio[name="code_type"]:checked').val();
 		$.ajax
         ({
-            url: "http://localhost:8000/check_connect",
+            url: "https://base.exploring.cn/mysql-binlog-query-server/check_connect",
             type: "POST",
             data: JSON.stringify({
             			"sql_name": sql_name,
@@ -176,7 +176,7 @@
 
         $.ajax
         ({
-            url: "http://localhost:8000/what",
+            url: "https://base.exploring.cn/mysql-binlog-query-server/what",
             type: "POST",
             data: JSON.stringify({
 
