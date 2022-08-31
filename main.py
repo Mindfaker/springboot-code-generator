@@ -51,6 +51,7 @@ def get_table_info(web_config: CommonCheckParam):
 @app.post("/get_db_list")
 def get_db_list():
     return {"data": build_java.get_db_list_by_default("")}
+    return {"data": build_java.get_db_list_by_default("")}
 
 
 @app.post("/get_table_list")
@@ -75,4 +76,4 @@ def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='127.0.0.1', port=9096)
+    uvicorn.run(app, host='cdh4', port=8741)

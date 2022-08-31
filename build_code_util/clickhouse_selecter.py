@@ -83,7 +83,7 @@ class SelectClickhouseData(object):
         else:
             size = self.sql_filter_condition.get("size")
 
-        return " LIMIT {start} , {size} ".format(start=(page - 1) * size, size=size)
+        return " LIMIT {start} , {size} ".format(start=(page - 1) * size, size=size) if page > 1 else " LIMIT " + str(size)
 
     def build_sql(self):
         """创建查询的SQL"""

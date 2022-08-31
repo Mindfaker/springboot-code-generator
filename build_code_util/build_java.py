@@ -82,7 +82,7 @@ def get_connection(sql_name, root='engine', password='Engine123S56^&*enginE',
 
 
 def get_db_list_by_default(db_name, root='engine', password='Engine123S56^&*enginE',
-                           host='rm-8vb7856yl4b5q1kf9yo.mysql.zhangbei.rds.aliyuncs.com', port='3306',
+                           host='rm-8vb7856yl4b5q1kf9.mysql.zhangbei.rds.aliyuncs.com', port='3306',
                            ):
     """
 
@@ -99,20 +99,22 @@ def get_db_list_by_default(db_name, root='engine', password='Engine123S56^&*engi
     engine = create_engine("mysql+pymysql://{}:{}@{}:{}".format(root, password, host, port), pool_recycle=7200)
     insp = reflection.Inspector.from_engine(engine)
     db_list = insp.get_schema_names()
+
     # 对数据库相关的数据进行处理
     if db_name is None or db_name == "":
         target_db_data = []
+        # 将配置好的数据放在所有数据的最前面
+        for priority_key in [x for x in db_format_dict.keys() if x in db_list]:
+            target_db_data.append([priority_key, db_format_dict[priority_key]])
         for db_name in db_list:
-            if db_name in db_format_dict.keys():
-                target_db_data.append([db_name, db_format_dict[db_name]])
-            else:
+            if db_name not in db_format_dict.keys():
                 target_db_data.append([db_name, db_name])
         return target_db_data
     else:
         if db_name not in db_list:
             return None
         else:
-            return insp.get_table_names(schema=db_name)
+            return [[x, "无数据表注释" + "---({})".format(x) if insp.get_table_comment(x, db_name)["text"] is None else insp.get_table_comment(x, db_name)["text"] + "---({})".format(x)] for x in insp.get_table_names(schema=db_name)]
 
 
 def get_mysql_structure(table_name, engine):
