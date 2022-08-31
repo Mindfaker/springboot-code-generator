@@ -42,8 +42,28 @@
 						 <label for="sql_detail">SQL内容</label><input type="text" class="form-control" id="sql_detail" />
 					</div>
 
+						页码  <select name="page" class="table_name" id="page"  >
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+						<option value="8">8</option>
+					</select>
 
-					<input class="button" type="button" value="获取" onclick="queryChangeLog()"/>
+						单页数据  <select name="size" class="table_name" id="size"  >
+						<option value="10">10</option>
+						<option value="20" selected>20</option>
+						<option value="50">50</option>
+						<option value="100">100</option>
+						<option value="500">500</option>
+						<option value="1000">1000</option>
+					</select><br>
+
+
+					<input class="button" type="button" value="查询数据库变动日志" onclick="queryChangeLog()"/>
 
 					 </fieldset>
 				</form>
@@ -51,27 +71,20 @@
 				<br>
 				<br>
 
+				<H2>数据查询结果</H2>
+				<hr>
+				<br>
 				<table border="1" class="target_table" id="ck_result_table">
-					<caption>数据查询结果</caption>
 					  <tr>
 						<th>数据库</th>
 						<th>数据表</th>
 						<th>变动类型</th>
-					    <th>数据表</th>
 						<th>变动时间</th>
 						<th>数据变动情况</th>
 						<th>事务起始ID</th>
 						<th>事务结束ID</th>
 						<th>执行SQL</th>
 					  </tr>
-					<tr>
-						<td>row 1, cell 1</td>
-						<td>row 1, cell 2</td>
-					</tr>
-					<tr>
-						<td>row 2, cell 1</td>
-						<td>row 2, cell 2</td>
-					</tr>
 				</table>
 			</div>
 		</div>
@@ -82,12 +95,69 @@
 <script type="text/javascript">
 
 	function queryChangeLog() {
+		var table_name = document.getElementById("table_name").value;
+		var sql_detail = document.getElementById("sql_detail").value;
+		var db_name = document.getElementById("dbName").value;
+		var page = document.getElementById("page").value;
+		var size = document.getElementById("size").value;
+		var table_head_string = "\t\t\t\t\t  <tr>\n" +
+				"\t\t\t\t\t\t<th>数据库</th>\n" +
+				"\t\t\t\t\t\t<th>数据表</th>\n" +
+				"\t\t\t\t\t\t<th>变动类型</th>\n" +
+				"\t\t\t\t\t\t<th>变动时间</th>\n" +
+				"\t\t\t\t\t\t<th>数据变动情况</th>\n" +
+				"\t\t\t\t\t\t<th>事务起始ID</th>\n" +
+				"\t\t\t\t\t\t<th>事务结束ID</th>\n" +
+				"\t\t\t\t\t\t<th>执行SQL</th>\n" +
+				"\t\t\t\t\t  </tr>"
+
+		var table_data_key_list = ["dbName", "tableName", "changeTypeInfo", "finishTimeInfo", "updateKeyInfo", "businessStartId", "businessEndId", "SQL"]
+		$.ajax
+        ({
+            url: " https://base.exploring.cn/mysql-binlog-query-server/select_data_by_ck",
+            type: "POST",
+			data: JSON.stringify({
+				"dbName": db_name,
+				"ckTableName": "mysql_change_log",
+				"changeTypeList":[1, 2],
+				"tableName":table_name,
+				"SQL":sql_detail,
+				"page": page,
+				"size": size
+			}),
+            dataType: "json",
+            contentType:'application/json; charset=utf-8',
+            success:function(res){
+				debugger
+            	$("#ck_result_table").html("").append(table_head_string)
+				for (var i in res.data) {
+					var line_data_list = []
+					for (var j in table_data_key_list) {
+						if (table_data_key_list[j] === "updateKeyInfo") {
+							const update_info_list = res.data[i][table_data_key_list[j]];
+							var sql_change_list = []
+							for (var update_index in update_info_list) {
+								var update_key = Object.keys(update_info_list[update_index])[0]
+								sql_change_list.push(update_key + ":  <br>"  +update_info_list[update_index][update_key][0] + "-->" + update_info_list[update_index][update_key][1] + "<br>" )
+							}
+							line_data_list.push("<td>" + sql_change_list.join("<br>") + "</td>")
+						} else {
+							line_data_list.push("<td>" + res.data[i][table_data_key_list[j]] + "</td>")
+						}
+					}
+					$("#ck_result_table").append("<tr>" + line_data_list.join("<br>") + "</tr>")
+				}
+                console.log(res);  //在console中查看数据
+            },
+            error:function(){
+                alert('failed!');
+            },
+        });
 
 	}
 
 	function get_table_list() {
 		var db_name = document.getElementById("dbName").value;
-		debugger
 		$.ajax
         ({
             url: " https://base.exploring.cn/mysql-binlog-query-server/get_table_list",
@@ -131,46 +201,6 @@
             },
         });
 	}
-
-
-	function showAdress() {
-        var sql_name = document.getElementById("sql_name").value;
-        var table_name = document.getElementById("table_name").value;
-        var mysql_host = document.getElementById("mysql_host").value;
-        var mysql_port = document.getElementById("mysql_port").value;
-        var mysql_root = document.getElementById("mysql_root").value;
-        var mysql_password = document.getElementById("mysql_password").value;
-        var menu_list = document.getElementById("menu_list").value;
-        var select_columns = document.getElementById("select_columns").value;
-		var code_type = $('input:radio[name="code_type"]:checked').val();
-
-        $.ajax
-        ({
-            url: "https://base.exploring.cn/mysql-binlog-query-server/what",
-            type: "POST",
-            data: JSON.stringify({
-
-            			"sql_name": sql_name,
-            			"table_name": table_name,
-            			"select_columns":select_columns,
-            			"menu_list":menu_list,
-            			"mysql_host": mysql_host,
-            			"mysql_port": mysql_port,
-            			"mysql_root": mysql_root,
-            			"mysql_password": mysql_password,
-            			"type": code_type
-                }),
-            dataType: "json",
-            contentType:'application/json; charset=utf-8',
-            success:function(res){
-				$(".code_detail").html(res.code.replace(/\n/g, "<br>"))
-                console.log(res);  //在console中查看数据
-            },
-            error:function(){
-                alert('failed!');
-            },
-        });
-    }
 
 	$(document).ready(function (){
 		get_db_list()

@@ -72,7 +72,7 @@ def build_code_oo(web_config: ParamGo):
 def select_data_by_ck(sql_condition: MySqlChangeLogCondition):
     conn_setting = {'host': "cdh5", 'user': 'root', 'password': 'Engine1314enginE'}
     ck = SelectClickhouseData(conn_setting, sql_filter_condition=sql_condition)
-    return codeInfo(code=ck.select_data_from_db())
+    return {"data": ck.select_data_from_db()}
 
 
 if __name__ == '__main__':
