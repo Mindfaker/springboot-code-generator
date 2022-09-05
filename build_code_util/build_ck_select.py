@@ -20,6 +20,7 @@ class CKConnectionSetting(object):
     user: str
     password: str
 
+
 class SelectClickhouseData(object):
     def __init__(self, connection_settings, sql_filter_condition: MySqlChangeLogCondition,
                  ck_table_name: str = "mysql_change_log", ck_db_name: str = "engine",
@@ -57,7 +58,7 @@ class SelectClickhouseData(object):
         """检查查询条件是否合理"""
         print("dbName" in self.sql_filter_condition.keys())
         print("tableName" in self.sql_filter_condition)
-        print( 0 < self.sql_filter_condition.get("size") <= 10000)
+        print(0 < self.sql_filter_condition.get("size") <= 10000)
         return "dbName" in self.sql_filter_condition.keys() and "tableName" in self.sql_filter_condition and 0 < self.sql_filter_condition.get(
             "size") <= 10000
 
@@ -132,12 +133,12 @@ class SelectClickhouseData(object):
                 return None
             split_list = update_str.replace("`", "").split(split_flag)
             if len(split_list) == 2:
-                key_list.append(str.strip(split_list[0]))
                 value = str.strip(split_list[1])
                 if value == "NULL":
                     continue
                 else:
                     value = int(value) if value.isdigit() else value
+                key_list.append(str.strip(split_list[0]))
                 value_list.append(value)
         return dict(zip(key_list, value_list))
 
@@ -153,17 +154,23 @@ class SelectClickhouseData(object):
         update_dict = self.build_update_sql_content_dict(update_data_list)
         raw_dict = self.build_update_sql_content_dict(raw_data_list)
 
-        # 更新中进行添加的数据
-        add_key_list = [{x: [update_dict.get(x), "\t"]} for x in update_dict.keys() if x not in raw_dict.keys()]
-        deleted_key_list = []
-        update_key_list = []
+        # 修改成 只对数据的任何变动进行统计   不再细拆分
+        all_value_key_list = list(update_dict.keys())
+        all_value_key_list.extend(list(raw_dict.keys()))
+        all_value_key_set = set(all_value_key_list)
+        return [{x, [update_dict.get(x, ""), raw_dict.get(x, "")]} for x in all_value_key_set if update_dict.get(x, "") != raw_dict.get(x, "")]
 
-        for key in raw_dict.keys():
-            if key not in update_dict.keys():
-                deleted_key_list.append({key: ["\t", raw_dict[key]]})
-            elif raw_dict.get(key) != update_dict.get(key):
-                update_key_list.append({key: [update_dict[key], raw_dict[key]]})
-        return add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict
+        # # 更新中进行添加的数据
+        # add_key_list = [{x: [update_dict.get(x), "\t"]} for x in update_dict.keys() if x not in raw_dict.keys()]
+        # deleted_key_list = []
+        # update_key_list = []
+        #
+        # for key in raw_dict.keys():
+        #     if key not in update_dict.keys():
+        #         deleted_key_list.append({key: ["\t", raw_dict[key]]})
+        #     elif raw_dict.get(key) != update_dict.get(key):
+        #         update_key_list.append({key: [update_dict[key], raw_dict[key]]})
+        # return add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict
 
     def format_data_info(self, raw_data_list: list):
         """对原始的查询数据进行必要的转化"""
@@ -173,21 +180,73 @@ class SelectClickhouseData(object):
 
             # 如果是update类型的话进行额外解读
             if raw_data.get("changeType") == 1:
-                raw_data["addKeyInfo"], raw_data["updateKeyInfo"], raw_data["deletedKeyInfo"], raw_data["updatedDataInfo"], raw_data["preUpdateDataInfo"] = self.explain_update_sql(raw_data.get("SQL"))
+                raw_data["addKeyInfo"], raw_data["updateKeyInfo"], raw_data["deletedKeyInfo"], raw_data[
+                    "updatedDataInfo"], raw_data["preUpdateDataInfo"] = self.explain_update_sql(raw_data.get("SQL"))
         return raw_data_list
+
+def build_update_sql_content_dict_1(update_str_list: list):
+    """对更新内容的数据进行解析  转换成字典"""
+    key_list = []
+    value_list = []
+    # 处理SQL中update语句中的更新内容的数据
+    for update_str in update_str_list:
+        if "=" in update_str:
+            split_flag = "="
+        elif " IS " in update_str:
+            split_flag = " IS "
+        else:
+            print("捕获到异常的分隔符！  更新语句内容为:" + update_str)
+            continue
+        split_list = update_str.replace("`", "").split(split_flag)
+        if len(split_list) == 2:
+            value = str.strip(split_list[1])
+            if value == "NULL":
+                continue
+            else:
+                value = int(value) if value.isdigit() else value
+            key_list.append(str.strip(split_list[0]))
+            value_list.append(value)
+    return dict(zip(key_list, value_list))
+
+def explain_update_sql(update_sql: str):
+    """对更新类型的SQL进行解释   提取出更新的内容"""
+    split_data_list = update_sql.replace("UPDATE", "").replace("LIMIT 1;", "").split("WHERE")
+
+    # SQL语句中的更新内容的语句
+    update_data_list = split_data_list[0].split("SET")[1].split(", ")
+    raw_data_list = split_data_list[1].split("AND")
+
+    # 更新内容的SQL语句解析成字典
+    update_dict = build_update_sql_content_dict_1(update_data_list)
+    raw_dict = build_update_sql_content_dict_1(raw_data_list)
+
+    # 更新中进行添加的数据
+    add_key_list = [{x: [update_dict.get(x), "\t"]} for x in update_dict.keys() if x not in raw_dict.keys()]
+    deleted_key_list = []
+    update_key_list = []
+
+    for key in raw_dict.keys():
+        if key not in update_dict.keys():
+            deleted_key_list.append({key: ["\t", raw_dict[key]]})
+        elif raw_dict.get(key) != update_dict.get(key):
+            update_key_list.append({key: [update_dict[key], raw_dict[key]]})
+    return add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict
 
 
 if __name__ == '__main__':
-    conditionInfo = MySqlChangeLogCondition()
-    conditionInfo.page = 1
-    conditionInfo.size = 20
-    conditionInfo.ckTableName = "mysql_change_log"
-    conditionInfo.changeTypeList = [1]
-    conditionInfo.dbName = "yq_gyh"
-    conditionInfo.tableName = "wx_order"
-    conditionInfo.SQL = "320381199303300319"
+    one_sql = r"UPDATE `yq_gyh`.`wx_order` SET `id`=17594, `local_order_sn`='20220808620604', `local_order_status`=1, `j_pay_status`=0, `j_order_sn`='', `pay_user_id`=NULL, `pay_user_phone`=NULL, `goods_id`=50138, `goods_name`='第十七届玄奘之路戈壁挑战赛', `goods_label`='gobi', `should_pay`=0.00000, `real_pay`=0.00000, `pay_describe`=NULL, `pay_date`=NULL, `returnd_total_price`=0.00000, `returnd_ask_date`=NULL, `returnd_result_date`=NULL, `returnd_success_total_price`=0.00000, `returnd_describe`=NULL, `add_time`='2022-08-08 11:56:43', `update_time`='2022-09-03 22:26:50', `close_date`=NULL, `deleted`=0, `is_online_pay`=0, `operate_user_id`=26047, `id_card_name`='张建军', `enroll_phone`='13259852218', `organize_id`=1178, `organize_name`='官方媒体及影像机构', `roles_id`=27, `roles_name`='官方影像', `id_card`='610111197012103075', `is_h5_register`=0, `h5_registe_email`=NULL, `gobi_id`=3, `refund_deduct_num`=0.00000, `refund_account_name`=NULL, `refund_bank`=NULL, `refund_bank_card_number`=NULL, `refund_apply_user_phone`=NULL, `refund_admin_operate_user_id`=NULL, `real_name`='', `sign_up_status`=1, `checked_date`=NULL, `checked_user_id`=0, `checked_user_name`=NULL, `hs_prove`=NULL, `ym_prove`=NULL, `wj_prove`=NULL, `open_status`=2, `refund_bank_branch`=NULL, `quit_time`=NULL, `order_note`=NULL, `ops`=NULL WHERE `id`=17594 AND `local_order_sn`='20220808620604' AND `local_order_status`=1 AND `j_pay_status`=0 AND `j_order_sn`='' AND `pay_user_id` IS NULL AND `pay_user_phone` IS NULL AND `goods_id`=50138 AND `goods_name`='第十七届玄奘之路戈壁挑战赛' AND `goods_label`='gobi' AND `should_pay`=0.00000 AND `real_pay`=0.00000 AND `pay_describe` IS NULL AND `pay_date` IS NULL AND `returnd_total_price`=0.00000 AND `returnd_ask_date` IS NULL AND `returnd_result_date` IS NULL AND `returnd_success_total_price`=0.00000 AND `returnd_describe` IS NULL AND `add_time`='2022-08-08 11:56:43' AND `update_time`='2022-08-09 06:00:56' AND `close_date` IS NULL AND `deleted`=0 AND `is_online_pay`=0 AND `operate_user_id`=26047 AND `id_card_name`='张建军' AND `enroll_phone`='13259852218' AND `organize_id`=1178 AND `organize_name`='官方媒体及影像机构' AND `roles_id`=27 AND `roles_name`='官方影像' AND `id_card`='610111197012103075' AND `is_h5_register`=0 AND `h5_registe_email` IS NULL AND `gobi_id`=3 AND `refund_deduct_num`=0.00000 AND `refund_account_name` IS NULL AND `refund_bank` IS NULL AND `refund_bank_card_number` IS NULL AND `refund_apply_user_phone` IS NULL AND `refund_admin_operate_user_id` IS NULL AND `real_name`='' AND `sign_up_status`=1 AND `checked_date` IS NULL AND `checked_user_id`=0 AND `checked_user_name` IS NULL AND `hs_prove` IS NULL AND `ym_prove` IS NULL AND `wj_prove` IS NULL AND `open_status`=2 AND `refund_bank_branch` IS NULL AND `quit_time` IS NULL AND `order_note` IS NULL AND `ops` IS NULL LIMIT 1;"
+    add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict = explain_update_sql(one_sql)
+    print(explain_update_sql(one_sql))
 
-    conn_setting = {'host': "cdh5", 'user': 'root', 'passwd': 'Engine1314enginE'}
-    ck = SelectClickhouseData(conn_setting, sql_filter_condition=conditionInfo)
-    print(ck.select_data_from_db())
-
+    # conditionInfo = MySqlChangeLogCondition()
+    # conditionInfo.page = 1
+    # conditionInfo.size = 20
+    # conditionInfo.ckTableName = "mysql_change_log"
+    # conditionInfo.changeTypeList = [1]
+    # conditionInfo.dbName = "yq_gyh"
+    # conditionInfo.tableName = "wx_order"
+    # conditionInfo.SQL = "320381199303300319"
+    #
+    # conn_setting = {'host': "cdh5", 'user': 'root', 'passwd': 'Engine1314enginE'}
+    # ck = SelectClickhouseData(conn_setting, sql_filter_condition=conditionInfo)
+    # print(ck.select_data_from_db())
