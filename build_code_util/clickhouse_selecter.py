@@ -7,7 +7,7 @@ import time
 class SelectClickhouseData(object):
     def __init__(self, connection_settings, sql_filter_condition: MySqlChangeLogCondition,
                  ck_table_name: str = "mysql_change_log", ck_db_name: str = "engine",
-                 filter_priority_list: list = ["dbName", "tableName", "changeTypeList"]):
+                 filter_priority_list: list = ["dbName", "tableName", "changeTypeList", "SQL"]):
         self.conn_setting = connection_settings
         self.client = Client(**self.conn_setting)
         self.ck_table_name = ck_table_name
@@ -137,7 +137,7 @@ class SelectClickhouseData(object):
         all_value_key_list = list(update_dict.keys())
         all_value_key_list.extend(list(raw_dict.keys()))
         all_value_key_set = set(all_value_key_list)
-        return [{x, [update_dict.get(x, ""), raw_dict.get(x, "")]} for x in all_value_key_set if update_dict.get(x, "") != raw_dict.get(x, "")]
+        return [{x: [update_dict.get(x, ""), raw_dict.get(x, "")]} for x in all_value_key_set if update_dict.get(x, "") != raw_dict.get(x, "")]
 
 
         # # 更新中进行添加的数据
