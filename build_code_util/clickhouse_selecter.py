@@ -112,12 +112,12 @@ class SelectClickhouseData(object):
                 return None
             split_list = update_str.replace("`", "").split(split_flag)
             if len(split_list) == 2:
-                key_list.append(str.strip(split_list[0]))
                 value = str.strip(split_list[1])
                 if value == "NULL":
                     continue
                 else:
                     value = int(value) if value.isdigit() else value
+                key_list.append(str.strip(split_list[0]))
                 value_list.append(value)
         return dict(zip(key_list, value_list))
 
@@ -133,17 +133,24 @@ class SelectClickhouseData(object):
         update_dict = self.build_update_sql_content_dict(update_data_list)
         raw_dict = self.build_update_sql_content_dict(raw_data_list)
 
-        # 更新中进行添加的数据
-        add_key_list = [{x: [update_dict.get(x), "\t"]} for x in update_dict.keys() if x not in raw_dict.keys()]
-        deleted_key_list = []
-        update_key_list = []
+        # 修改成 只对数据的任何变动进行统计   不再细拆分
+        all_value_key_list = list(update_dict.keys())
+        all_value_key_list.extend(list(raw_dict.keys()))
+        all_value_key_set = set(all_value_key_list)
+        return [{x, [update_dict.get(x, ""), raw_dict.get(x, "")]} for x in all_value_key_set if update_dict.get(x, "") != raw_dict.get(x, "")]
 
-        for key in raw_dict.keys():
-            if key not in update_dict.keys():
-                deleted_key_list.append({key: ["\t", raw_dict[key]]})
-            elif raw_dict.get(key) != update_dict.get(key):
-                update_key_list.append({key: [update_dict[key], raw_dict[key]]})
-        return add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict
+
+        # # 更新中进行添加的数据
+        # add_key_list = [{x: [update_dict.get(x), "\t"]} for x in update_dict.keys() if x not in raw_dict.keys()]
+        # deleted_key_list = []
+        # update_key_list = []
+        #
+        # for key in raw_dict.keys():
+        #     if key not in update_dict.keys():
+        #         deleted_key_list.append({key: ["\t", raw_dict[key]]})
+        #     elif raw_dict.get(key) != update_dict.get(key):
+        #         update_key_list.append({key: [update_dict[key], raw_dict[key]]})
+        # return add_key_list, update_key_list, deleted_key_list, update_dict, raw_dict
 
     def format_data_info(self, raw_data_list: list):
         """对原始的查询数据进行必要的转化"""
@@ -153,7 +160,11 @@ class SelectClickhouseData(object):
 
             # 如果是update类型的话进行额外解读
             if raw_data.get("changeType") == 1:
-                raw_data["addKeyInfo"], raw_data["updateKeyInfo"], raw_data["deletedKeyInfo"], raw_data["updatedDataInfo"], raw_data["preUpdateDataInfo"] = self.explain_update_sql(raw_data.get("SQL"))
+                raw_data["updateKeyInfo"] = self.explain_update_sql(raw_data.get("SQL"))
+
+            # # 如果是update类型的话进行额外解读
+            # if raw_data.get("changeType") == 1:
+            #     raw_data["addKeyInfo"], raw_data["updateKeyInfo"], raw_data["deletedKeyInfo"], raw_data["updatedDataInfo"], raw_data["preUpdateDataInfo"] = self.explain_update_sql(raw_data.get("SQL"))
         return raw_data_list
 
 if __name__ == '__main__':
