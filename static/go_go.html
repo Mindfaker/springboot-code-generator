@@ -41,6 +41,8 @@
 					<div class="form-group">
 						 <label for="sql_detail">SQL内容</label><input type="text" class="form-control" id="sql_detail" />
 					</div>
+					变动开始时间<input type="datetime-local" name="start_time" id="start_time" value="" /><br>
+					变动结束时间<input type="datetime-local" name="end_time" id="end_time" value="" /><br>
 
 						页码  <select name="page" class="table_name" id="page"  >
 						<option value="1">1</option>
@@ -62,7 +64,6 @@
 						<option value="1000">1000</option>
 					</select><br>
 
-
 					<input class="button" type="button" value="查询数据库变动日志" onclick="queryChangeLog()"/>
 
 					 </fieldset>
@@ -76,14 +77,14 @@
 				<br>
 				<table border="1" class="target_table" id="ck_result_table">
 					  <tr>
-						<th>数据库</th>
-						<th>数据表</th>
-						<th>变动类型</th>
-						<th>变动时间</th>
-						<th>数据变动情况</th>
-						<th>事务起始ID</th>
-						<th>事务结束ID</th>
-						<th>执行SQL</th>
+						<th width="5%">数据库</th>
+						<th width="5%">数据表</th>
+						<th width="10%">变动类型</th>
+						<th width="10%">变动时间</th>
+						<th width="20%">数据变动情况</th>
+						<th width="5%">事务起始ID</th>
+						<th width="5%">事务结束ID</th>
+						<th width="40%">执行SQL</th>
 					  </tr>
 				</table>
 			</div>
@@ -95,21 +96,27 @@
 <script type="text/javascript">
 
 	function queryChangeLog() {
+		var change_type_list = [];
+		for (var i = 0; i < $("input[type = 'checkbox']:checked").length; i++) {
+			change_type_list.push(Number($("input[type = 'checkbox']:checked")[i].value))
+		}
+		var start_time = document.getElementById("start_time").value;
+		var end_time = document.getElementById("end_time").value;
+		debugger
 		var table_name = document.getElementById("table_name").value;
 		var sql_detail = document.getElementById("sql_detail").value;
-		debugger
 		var db_name = document.getElementById("dbName").value;
 		var page = document.getElementById("page").value;
 		var size = document.getElementById("size").value;
 		var table_head_string = "\t\t\t\t\t  <tr>\n" +
-				"\t\t\t\t\t\t<th>数据库</th>\n" +
-				"\t\t\t\t\t\t<th>数据表</th>\n" +
-				"\t\t\t\t\t\t<th>变动类型</th>\n" +
-				"\t\t\t\t\t\t<th>变动时间</th>\n" +
-				"\t\t\t\t\t\t<th>数据变动情况</th>\n" +
-				"\t\t\t\t\t\t<th>事务起始ID</th>\n" +
-				"\t\t\t\t\t\t<th>事务结束ID</th>\n" +
-				"\t\t\t\t\t\t<th>执行SQL</th>\n" +
+				"\t\t\t\t\t\t<th width=\"5%\">数据库</th>\n" +
+				"\t\t\t\t\t\t<th width=\"5%\">数据表</th>\n" +
+				"\t\t\t\t\t\t<th width=\"10%\">变动类型</th>\n" +
+				"\t\t\t\t\t\t<th width=\"10%\">变动时间</th>\n" +
+				"\t\t\t\t\t\t<th width=\"20%\">数据变动情况</th>\n" +
+				"\t\t\t\t\t\t<th width=\"5%\">事务起始ID</th>\n" +
+				"\t\t\t\t\t\t<th width=\"5%\">事务结束ID</th>\n" +
+				"\t\t\t\t\t\t<th width=\"40%\">执行SQL</th>\n" +
 				"\t\t\t\t\t  </tr>"
 
 		var table_data_key_list = ["dbName", "tableName", "changeTypeInfo", "finishTimeInfo", "updateKeyInfo", "businessStartId", "businessEndId", "SQL"]
@@ -120,11 +127,13 @@
 			data: JSON.stringify({
 				"dbName": db_name,
 				"ckTableName": "mysql_change_log",
-				"changeTypeList":[1, 2],
+				"changeTypeList":change_type_list,
 				"tableName":table_name,
 				"SQL":sql_detail,
 				"page": page,
-				"size": size
+				"size": size,
+				"startTime": start_time,
+				"endTime": end_time
 			}),
             dataType: "json",
             contentType:'application/json; charset=utf-8',

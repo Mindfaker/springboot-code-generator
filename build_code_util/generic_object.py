@@ -32,6 +32,8 @@ class ParamGo(BaseModel):
 
 # 对clickhouse  进行筛选查询的条件
 class MySqlChangeLogCondition(BaseModel):
+    startTime: str
+    endTime: str
     ckTableName: str
     changeTypeList: list
     dbName: str

@@ -7,7 +7,7 @@ import time
 class SelectClickhouseData(object):
     def __init__(self, connection_settings, sql_filter_condition: MySqlChangeLogCondition,
                  ck_table_name: str = "mysql_change_log", ck_db_name: str = "engine",
-                 filter_priority_list: list = ["dbName", "tableName", "changeTypeList", "SQL"]):
+                 filter_priority_list: list = ["dbName", "tableName", "changeTypeList", "startTime", "endTime", "SQL"]):
         self.conn_setting = connection_settings
         self.client = Client(**self.conn_setting)
         self.ck_table_name = ck_table_name
@@ -64,6 +64,21 @@ class SelectClickhouseData(object):
                     else:
                         filter_condition_list.append(" {key} in ({value}) ".format(key="changeType", value=",".join(
                             list(map(lambda x: str(x), self.sql_filter_condition.get(filter_priority))))))
+                elif filter_priority == "startTime":
+                    try:
+                        unix_start_time_info = int(time.mktime(time.strptime(self.sql_filter_condition.get(filter_priority), "%Y-%m-%dT%H:%M")))
+                    except Exception as e:
+                        print("转换时间信息成为unix时间戳失败！  接收到的时间戳为:  " + self.sql_filter_condition.get(filter_priority))
+                        continue
+                    filter_condition_list.append(" finishTime >= {value} ".format(value=unix_start_time_info))
+
+                elif filter_priority == "endTime":
+                    try:
+                        unix_end_time_info = int(time.mktime(time.strptime(self.sql_filter_condition.get(filter_priority), "%Y-%m-%dT%H:%M")))
+                    except Exception as e:
+                        print("转换时间信息成为unix时间戳失败！  接收到的时间戳为:  " + self.sql_filter_condition.get(filter_priority))
+                        continue
+                    filter_condition_list.append(" finishTime <= {value} ".format(value=unix_end_time_info))
                 else:
                     filter_condition_list.append(" {key} = '{value}' ".format(key=filter_priority,
                                                                               value=self.sql_filter_condition.get(
